@@ -12,6 +12,9 @@ venv/
 *.png
 *.px.png
 
+# But allow example images
+!examples/*.png
+
 # IDE
 .vscode/
 .idea/
