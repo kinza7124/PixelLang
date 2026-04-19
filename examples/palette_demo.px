@@ -1,0 +1,39 @@
+// Palette System Demo
+// Shows how to define and use color palettes
+
+CANVAS 80 80;
+
+// Define a sunset palette
+PALETTE 0 #FF6B6B;   // Coral
+PALETTE 1 #FF8E53;   // Orange
+PALETTE 2 #FE6B8B;   // Pink
+PALETTE 3 #FF8E53;   // Gold
+PALETTE 4 #C44569;   // Deep red
+
+// Background gradient simulation using rectangles
+// (from palette colors)
+RECT 0 0 80 16 #FF6B6B;
+RECT 0 16 80 16 #FF8E53;
+RECT 0 32 80 16 #FE6B8B;
+RECT 0 48 80 16 #FF8E53;
+RECT 0 64 80 16 #C44569;
+
+// Stars using palette colors
+STAR 15 20 6 3 5 #FFFFFF;
+STAR 65 25 5 2 4 #FFFFFF;
+STAR 40 15 4 2 6 #FFFFFF;
+
+// Moon - heart shape
+HEART 60 20 6 #FDFEFE;
+
+// Mountains using triangles
+TRIANGLE 0 79 20 55 40 79 #2C3E50;
+TRIANGLE 30 79 50 50 70 79 #34495E;
+TRIANGLE 55 79 75 55 79 79 #2C3E50;
+
+// Rounded frame outline
+ROUNDRECT 5 5 70 70 3 #1A1A2E;  // Dark frame
+BORDER 5 5 70 70 2 #FFFFFF;
+
+// Title
+TEXT 25 3 SUNSET #FFFFFF;

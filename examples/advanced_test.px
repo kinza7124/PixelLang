@@ -1,0 +1,31 @@
+// Advanced PixelLang Features Test
+// Tests FILL command and all other features
+
+CANVAS 64 64;
+
+// Black background
+RECT 0 0 64 64 #000000;
+
+// Draw a white rectangle as a "room"
+RECT 10 10 44 44 #FFFFFF;
+
+// Use FILL to color the inside of the room
+FILL 15 15 #FFE4B5;  // Light peach color inside
+
+// Draw a blue circle window
+CIRCLE 32 20 5 #4FC3F7;
+
+// Draw door
+RECT 28 40 8 12 #8B4513;
+
+// Draw some pixels as flowers
+PIXEL 15 50 #FF69B4;
+PIXEL 20 50 #FF1493;
+PIXEL 45 50 #FF69B4;
+PIXEL 50 50 #FF1493;
+
+// Draw a path using line
+LINE 32 52 32 58 #808080;
+
+// Small decorative circle
+CIRCLE 32 55 2 #32CD32;

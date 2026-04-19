@@ -1,0 +1,65 @@
+// PixelLang Advanced Shapes Demo v1.3
+// Demonstrates all 18 keywords including advanced features
+
+CANVAS 100 100;
+
+// Clear with dark background
+CLEAR #1A1A2E;
+
+// ===== ARC - Draw arc shapes =====
+ARC 20 20 15 0 180 #E94560;    // Upper semicircle (red)
+ARC 80 20 15 180 360 #0F3460;  // Lower semicircle (blue)
+
+// ===== POLYGON - Draw 4-point polygon (diamond) =====
+POLYGON 50 10 60 30 50 50 40 30 #16C79A;
+
+// ===== ELLIPSE - Different radii =====
+ELLIPSE 20 70 12 6 #F9A825;
+
+// ===== CIRCLE - Perfect circle =====
+CIRCLE 80 70 8 #E91E63;
+
+// ===== TRIANGLE - 3-point filled shape =====
+TRIANGLE 10 85 30 85 20 70 #00BCD4;
+
+// ===== BORDER - Hollow rectangle frame =====
+BORDER 2 2 96 96 3 #4A4A6A;
+
+// ===== LINE - Connect points =====
+LINE 50 50 85 85 #FF9800;
+
+// ===== RECT - Filled rectangle =====
+RECT 70 10 20 15 #9C27B0;
+
+// ===== PIXEL - Single pixel =====
+PIXEL 50 60 #FFFFFF;
+
+// ===== TEXT - Draw simple text =====
+TEXT 35 88 KINZA #FFFFFF;
+
+// ===== MIRROR - Flip context horizontally =====
+MIRROR 0;
+
+// ===== SCALE - Scale up drawing =====
+SCALE 2;
+
+// ===== FILL - Flood fill area =====
+FILL 5 5 #16213E;
+
+// ===== LOOP + TRANSLATE + ROTATE pattern =====
+LOOP 3 {
+    PIXEL 10 10 #A8D8EA;
+    TRANSLATE 5 0;
+    ROTATE 15;
+}
+
+// Reset transformations
+MIRROR 0;  // Toggle back
+SCALE 1;   // Reset scale
+ROTATE 0;  // Reset rotation
+
+// Add corner markers
+PIXEL 0 0 #FFFFFF;
+PIXEL 99 0 #FFFFFF;
+PIXEL 0 99 #FFFFFF;
+PIXEL 99 99 #FFFFFF;

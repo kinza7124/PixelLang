@@ -1,0 +1,55 @@
+// PixelLang v2.0 Features Demo
+// This showcases all the new advanced drawing commands
+
+CANVAS 120 120;
+
+// Background
+CLEAR #1A1A2E;
+
+// ===== Palette Management =====
+// Define a color palette
+PALETTE 0 #FF6B6B;   // Coral Red
+PALETTE 1 #4ECDC4;   // Teal
+PALETTE 2 #FFE66D;   // Yellow
+PALETTE 3 #95E1D3;   // Mint
+PALETTE 4 #F38181;   // Pink
+
+// ===== Star Shape =====
+// STAR cx cy outer_r inner_r points #COLOR
+STAR 20 20 12 5 5 #FF6B6B;
+STAR 100 20 10 4 6 #4ECDC4;
+
+// ===== Heart Shape =====
+// HEART cx cy size #COLOR
+HEART 60 25 8 #F38181;
+
+// ===== Rounded Rectangle =====
+// ROUNDRECT x y w h radius #COLOR
+ROUNDRECT 10 45 30 20 5 #FFE66D;
+ROUNDRECT 80 45 30 20 8 #95E1D3;
+
+// ===== Arrow =====
+// ARROW x1 y1 x2 y2 head_size #COLOR
+ARROW 60 40 60 55 5 #FFFFFF;
+ARROW 45 65 75 65 4 #FFFFFF;
+
+// ===== Bezier Curve =====
+// BEZIER x1 y1 cx1 cy1 cx2 cy2 x2 y2 #COLOR
+BEZIER 10 85 30 70 50 100 70 85 #FF6B6B;
+BEZIER 50 85 70 70 90 100 110 85 #4ECDC4;
+
+// ===== Sprites =====
+// SPRITE x y pattern #COLOR
+// Pattern is binary: 1 = pixel, 0 = empty
+// 3x3 heart pattern
+SPRITE 15 95 010101111010000 #FF6B6B;
+// 3x3 diamond pattern  
+SPRITE 35 95 001010100010100 #FFE66D;
+// 3x3 X pattern
+SPRITE 55 95 101010001010101 #95E1D3;
+
+// Border frame
+BORDER 2 2 116 116 2 #4A4A6A;
+
+// Title text
+TEXT 35 5 V2DEMO #FFFFFF;

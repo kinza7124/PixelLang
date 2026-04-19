@@ -1,0 +1,47 @@
+// PixelLang All Commands Demo v1.2
+// Demonstrates all 13 keywords and features
+
+CANVAS 80 80;
+
+// ===== CLEAR - Fill entire canvas =====
+CLEAR #1A1A2E;  // Dark blue background
+
+// ===== BORDER - Hollow rectangle border =====
+BORDER 2 2 76 76 2 #4A4A6A;  // Outer border
+
+// ===== ELLIPSE - Draw ellipse =====
+ELLIPSE 40 25 20 10 #E94560;  // Red horizontal ellipse at top
+
+// ===== CIRCLE - Draw circle =====
+CIRCLE 40 40 12 #0F3460;  // Blue circle in center
+
+// ===== TRIANGLE - Draw filled triangle =====
+TRIANGLE 40 20 25 35 55 35 #16C79A;  // Green triangle pointing up
+
+// ===== LINE - Draw line =====
+LINE 10 55 70 55 #E94560;  // Red horizontal line
+
+// ===== RECT - Draw filled rectangle =====
+RECT 35 58 10 15 #F9A825;  // Yellow rectangle at bottom
+
+// ===== PIXEL - Draw single pixel =====
+PIXEL 40 72 #FFFFFF;  // White dot at bottom
+
+// ===== LOOP + TRANSLATE - Pattern generation =====
+LOOP 5 {
+    PIXEL 10 10 #A8D8EA;  // Cyan dots pattern
+    TRANSLATE 12 0;
+}
+
+// ===== FILL - Flood fill =====
+// Fill the circle with lighter blue
+FILL 40 40 #16213E;
+
+// ===== ROTATE - Set rotation context =====
+ROTATE 0;  // Reset rotation
+
+// Add some corner decorations
+PIXEL 5 5 #FFFFFF;
+PIXEL 74 5 #FFFFFF;
+PIXEL 5 74 #FFFFFF;
+PIXEL 74 74 #FFFFFF;

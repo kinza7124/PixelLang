@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelLang — Complete Language Specification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+  :root {
+    --bg: #0d0d14;
+    --bg2: #12121c;
+    --bg3: #1a1a2a;
+    --bg4: #22223a;
+    --surface: #1e1e30;
+    --border: #2e2e4a;
+    --border2: #3a3a5c;
+    --text: #e8e6f0;
+    --text2: #9896b0;
+    --text3: #6665808;
+    --accent: #7c6af5;
+    --accent2: #5ddbbc;
+    --accent3: #f5a623;
+    --accent4: #f06292;
+    --accent5: #64b5f6;
+    --green: #69d88a;
+    --red: #f07070;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.65;
+  }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    transition: transform .3s;
+  }
+
+  .sidebar-logo {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-pixel {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-tag {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+
+  .nav-section {
+    padding: .75rem 1rem .25rem;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: .45rem 1.25rem;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all .15s;
+    text-decoration: none;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(124,106,245,.08); }
+
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    padding: 0;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-title { font-size: 14px; color: var(--text2); font-family: var(--mono); }
+
+  .badge-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .badge {
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: .03em;
+  }
+
+  .badge-pu { background: rgba(124,106,245,.2); color: #b0a6ff; border: 1px solid rgba(124,106,245,.3); }
+  .badge-te { background: rgba(93,219,188,.15); color: #5ddbbc; border: 1px solid rgba(93,219,188,.25); }
+  .badge-am { background: rgba(245,166,35,.15); color: #f5a623; border: 1px solid rgba(245,166,35,.25); }
+
+  /* ── CONTENT ── */
+  .content { padding: 2rem; max-width: 900px; }
+
+  /* ── SECTIONS ── */
+  .section { margin-bottom: 3rem; scroll-margin-top: 80px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(124,106,245,.12);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(124,106,245,.2);
+    white-space: nowrap;
+  }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.3px;
+  }
+
+  .section-desc {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 1.25rem;
+    line-height: 1.7;
+    max-width: 750px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text2);
+    margin-bottom: .75rem;
+  }
+
+  .card-title span {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+  /* ── CODE BLOCKS ── */
+  pre, .code {
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+    color: #cdd6f4;
+    overflow-x: auto;
+    white-space: pre;
+    margin: .75rem 0;
+  }
+
+  .kw { color: #cba6f7; }
+  .str { color: #a6e3a1; }
+  .num { color: #fab387; }
+  .cm { color: #585b80; font-style: italic; }
+  .fn { color: #89b4fa; }
+  .op { color: #94e2d5; }
+  .ann { color: #f9e2af; }
+  .var { color: #f38ba8; }
+
+  /* ── TABLES ── */
+  .tbl-wrap { overflow-x: auto; margin: .75rem 0; border-radius: 8px; border: 1px solid var(--border); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: var(--bg3);
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.02); }
+
+  td {
+    padding: 9px 14px;
+    vertical-align: top;
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  td.mono { font-family: var(--mono); font-size: 11.5px; color: #89b4fa; }
+  td.accent { color: var(--accent2); font-weight: 500; }
+  td.warn { color: var(--accent3); }
+  td.err { color: var(--red); }
+  td.ok { color: var(--green); }
+
+  /* ── PILLS / TAGS ── */
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin: 2px;
+  }
+
+  .pill-pu { background: rgba(124,106,245,.2); color: #b0a6ff; }
+  .pill-te { background: rgba(93,219,188,.15); color: #5ddbbc; }
+  .pill-am { background: rgba(245,166,35,.15); color: #f5a623; }
+  .pill-pi { background: rgba(240,98,146,.15); color: #f07cae; }
+  .pill-bl { background: rgba(100,181,246,.15); color: #64b5f6; }
+  .pill-gr { background: rgba(105,216,138,.15); color: #69d88a; }
+  .pill-gy { background: rgba(150,150,180,.12); color: #9896b0; }
+  .pill-re { background: rgba(240,112,112,.15); color: #f07070; }
+
+  /* ── SPECIAL BLOCKS ── */
+  .rule-block {
+    background: var(--bg3);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: .9rem 1.1rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #cdd6f4;
+    line-height: 1.9;
+    margin: .5rem 0;
+  }
+
+  .note {
+    background: rgba(93,219,188,.06);
+    border: 1px solid rgba(93,219,188,.2);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: 13px;
+    color: var(--accent2);
+    margin: .75rem 0;
+    line-height: 1.6;
+  }
+
+  .warn-box {
+    background: rgba(245,166,35,.06);
+    border: 1px solid rgba(245,166,35,.2);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: 13px;
+    color: var(--accent3);
+    margin: .75rem 0;
+    line-height: 1.6;
+  }
+
+  .err-box {
+    background: rgba(240,112,112,.06);
+    border: 1px solid rgba(240,112,112,.2);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: 13px;
+    color: var(--red);
+    margin: .75rem 0;
+    line-height: 1.6;
+  }
+
+  /* ── FLOW DIAGRAM ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+    padding: 1.25rem;
+    background: var(--bg3);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .pipe-box {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: var(--mono);
+    text-align: center;
+    min-width: 90px;
+    margin: 4px 0;
+  }
+
+  .pipe-arrow {
+    color: var(--border2);
+    font-size: 18px;
+    padding: 0 4px;
+  }
+
+  /* ── DFA DIAGRAM ── */
+  .dfa {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .state {
+    display: inline-block;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    text-align: center;
+    line-height: 40px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--bg4);
+    margin: 4px;
+    vertical-align: middle;
+  }
+
+  .state.accept {
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 0 3px rgba(105,216,138,.1);
+  }
+
+  .state.start {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── FIRST/FOLLOW ── */
+  .set-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .set-row:last-child { border-bottom: none; }
+  .set-lhs { font-family: var(--mono); color: var(--accent); min-width: 140px; font-size: 12px; padding-top: 2px; }
+  .set-vals { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* ── AST TREE ── */
+  .tree {
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.9;
+    color: #cdd6f4;
+    overflow-x: auto;
+  }
+
+  .tree .node-name { color: #89b4fa; }
+  .tree .node-field { color: #a6e3a1; }
+  .tree .node-val { color: #fab387; }
+  .tree .tree-line { color: #44445a; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--bg2) 0%, #1a1030 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    margin-bottom: 0;
+  }
+
+  .hero h1 {
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+
+  .hero-sub { font-size: 15px; color: var(--text2); margin-bottom: 1.25rem; }
+
+  .hero-meta { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .hero-chip {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  /* ── PARSE TABLE ── */
+  .parse-table th { min-width: 80px; }
+  .parse-table td { font-family: var(--mono); font-size: 11px; color: #89b4fa; }
+  .parse-table td.empty { color: var(--border2); }
+  .parse-table td.err-cell { color: var(--red); }
+
+  /* ── HAMBURGER ── */
+  .hamburger {
+    display: none;
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 90;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block; }
+    .main { margin-left: 0; }
+    .hamburger { display: block; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .content { padding: 1.25rem; }
+    .hero { padding: 1.5rem 1.25rem; }
+    .hero h1 { font-size: 24px; }
+    .topbar { padding: .75rem 1.25rem; }
+    pre, .code { font-size: 11px; }
+  }
+
+  @media (max-width: 480px) {
+    table { font-size: 12px; }
+    td, thead th { padding: 7px 10px; }
+    .section-title { font-size: 18px; }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── ACTIVE NAV HIGHLIGHT ON SCROLL ── */
+  .highlight { background: rgba(124,106,245,.05); }
+
+  p { font-size: 14px; color: var(--text2); line-height: 1.7; margin-bottom: .75rem; }
+  strong { color: var(--text); font-weight: 600; }
+  h3 { font-size: 15px; font-weight: 600; color: var(--text); margin: 1.25rem 0 .5rem; }
+  h4 { font-size: 13px; font-weight: 600; color: var(--accent2); margin: 1rem 0 .4rem; font-family: var(--mono); }
+
+  .sym-scope {
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    margin: 8px 0;
+  }
+
+  .sym-scope.scope-1 { border-color: var(--accent2); }
+  .sym-scope.scope-2 { border-color: var(--accent3); }
+
+  .inline-code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: #89b4fa;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-pixel">[ PixelLang ]</div>
+    <div class="logo-tag">Language Specification v1.0 — CS4031</div>
+  </div>
+
+  <div class="nav-section">Foundation</div>
+  <a class="nav-item active" href="#overview" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#7c6af5"></span>Overview & Pipeline
+  </a>
+  <a class="nav-item" href="#alphabet" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#5ddbbc"></span>Character Set & Alphabet
+  </a>
+
+  <div class="nav-section">Lexical Phase</div>
+  <a class="nav-item" href="#keywords" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#f5a623"></span>Keywords & Reserved Words
+  </a>
+  <a class="nav-item" href="#identifiers" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#f06292"></span>Identifiers
+  </a>
+  <a class="nav-item" href="#tokens" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#64b5f6"></span>Tokens & Lexemes
+  </a>
+  <a class="nav-item" href="#dfa" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#69d88a"></span>DFA / Automata
+  </a>
+
+  <div class="nav-section">Syntax Phase</div>
+  <a class="nav-item" href="#grammar" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#7c6af5"></span>Formal Grammar (BNF)
+  </a>
+  <a class="nav-item" href="#first-follow" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#5ddbbc"></span>FIRST & FOLLOW Sets
+  </a>
+  <a class="nav-item" href="#parse-table" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#f5a623"></span>LL(1) Parse Table
+  </a>
+  <a class="nav-item" href="#parse-tree" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#f06292"></span>Parse Tree & AST
+  </a>
+
+  <div class="nav-section">Semantic Phase</div>
+  <a class="nav-item" href="#symtable" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#64b5f6"></span>Symbol Table
+  </a>
+  <a class="nav-item" href="#semantic" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#69d88a"></span>Semantic Rules
+  </a>
+  <a class="nav-item" href="#errors" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#f07070"></span>Error Handling
+  </a>
+
+  <div class="nav-section">Output Phase</div>
+  <a class="nav-item" href="#codegen" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#7c6af5"></span>Code Generation
+  </a>
+  <a class="nav-item" href="#gui" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#5ddbbc"></span>GUI Specification
+  </a>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <span class="topbar-title">PixelLang — Complete Language Spec</span>
+    </div>
+    <div class="badge-row">
+      <span class="badge badge-pu">CS4031</span>
+      <span class="badge badge-te">Spring 2026</span>
+      <span class="badge badge-am">LL(1) Grammar</span>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>PixelLang</h1>
+    <div class="hero-sub">A retro-inspired domain-specific language for pixel art generation — complete compiler specification for CS4031 Compiler Construction.</div>
+    <div class="hero-meta">
+      <span class="hero-chip">Python backend</span>
+      <span class="hero-chip">Pillow / PIL output</span>
+      <span class="hero-chip">Tkinter GUI</span>
+      <span class="hero-chip">PNG generation</span>
+      <span class="hero-chip">8 keywords</span>
+      <span class="hero-chip">13 semantic rules</span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 1: OVERVIEW
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="overview">
+      <div class="section-header">
+        <span class="section-num">§ 01</span>
+        <span class="section-title">Overview & Compilation Pipeline</span>
+      </div>
+      <p class="section-desc">PixelLang is a mini scripting language that compiles a <strong>.px</strong> source file into a PNG pixel-art image. The compiler implements all six classical phases of a compiler: lexical analysis, syntax analysis, semantic analysis, intermediate representation (AST), code generation, and error reporting — all with a Tkinter GUI.</p>
+
+      <div class="pipeline">
+        <div class="pipe-box" style="background:rgba(124,106,245,.15);color:#b0a6ff;border:1px solid rgba(124,106,245,.3)">Source.px</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" style="background:rgba(93,219,188,.12);color:#5ddbbc;border:1px solid rgba(93,219,188,.25)">Lexer</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" style="background:rgba(245,166,35,.12);color:#f5a623;border:1px solid rgba(245,166,35,.25)">Tokens</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" style="background:rgba(240,98,146,.12);color:#f07cae;border:1px solid rgba(240,98,146,.25)">Parser</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" style="background:rgba(100,181,246,.12);color:#64b5f6;border:1px solid rgba(100,181,246,.25)">AST</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" style="background:rgba(105,216,138,.12);color:#69d88a;border:1px solid rgba(105,216,138,.25)">Semantic</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" style="background:rgba(124,106,245,.15);color:#b0a6ff;border:1px solid rgba(124,106,245,.3)">CodeGen</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" style="background:rgba(93,219,188,.12);color:#5ddbbc;border:1px solid rgba(93,219,188,.25)">PNG out</div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Phase</th><th>File</th><th>Input</th><th>Output</th><th>Key concept</th></tr></thead>
+          <tbody>
+            <tr><td class="accent">Lexical Analysis</td><td class="mono">lexer.py</td><td>Raw .px source string</td><td>List of Token objects</td><td>Tokenization, DFA, reserved words</td></tr>
+            <tr><td class="accent">Syntax Analysis</td><td class="mono">parser.py</td><td>Token list</td><td>AST (ProgramNode)</td><td>LL(1), recursive descent, grammar</td></tr>
+            <tr><td class="accent">AST</td><td class="mono">ast_nodes.py</td><td>Parser calls</td><td>Node objects + visitor</td><td>Tree structure, visitor pattern</td></tr>
+            <tr><td class="accent">Symbol Table</td><td class="mono">symbol_table.py</td><td>AST traversal</td><td>Scope stack of Symbols</td><td>Scopes, define/lookup</td></tr>
+            <tr><td class="accent">Semantic Analysis</td><td class="mono">semantic.py</td><td>AST + Symbol Table</td><td>List of SemanticErrors</td><td>Type/bounds/scope checking</td></tr>
+            <tr><td class="accent">Code Generation</td><td class="mono">codegen.py</td><td>Validated AST</td><td>PIL Image → PNG</td><td>AST walk, transform stack</td></tr>
+            <tr><td class="accent">GUI</td><td class="mono">gui/app.py</td><td>User input</td><td>Editor + live preview</td><td>Tkinter, syntax highlighting</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 2: CHARACTER SET
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="alphabet">
+      <div class="section-header">
+        <span class="section-num">§ 02</span>
+        <span class="section-title">Character Set & Alphabet (Σ)</span>
+      </div>
+      <p class="section-desc">The alphabet Σ of PixelLang is the set of all valid characters the lexer accepts. Characters outside Σ cause an immediate <strong>LexError</strong>.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><span style="background:#b0a6ff"></span>Letters — A-Z, a-z</div>
+          <p>Used in keywords (always UPPERCASE) and identifiers (mixed case). The lexer is <strong>case-sensitive</strong> — <span class="inline-code">PIXEL</span> ≠ <span class="inline-code">pixel</span>.</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span style="background:#5ddbbc"></span>Digits — 0-9</div>
+          <p>Used in NUMBER literals (coordinates, dimensions, loop counts) and inside COLOR hex codes after the <span class="inline-code">#</span> prefix.</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span style="background:#f5a623"></span>Hex letters — A-F, a-f</div>
+          <p>Valid only inside a COLOR literal after <span class="inline-code">#</span>. Example: <span class="inline-code">#FF0000</span>. Both upper and lower case accepted.</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span style="background:#f07cae"></span>Special characters</div>
+          <div class="tbl-wrap" style="margin-top:6px">
+            <table>
+              <thead><tr><th>Char</th><th>Purpose</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">#</td><td>Starts a COLOR literal</td></tr>
+                <tr><td class="mono">{ }</td><td>Block delimiters (LOOP body)</td></tr>
+                <tr><td class="mono">;</td><td>Statement terminator</td></tr>
+                <tr><td class="mono">//</td><td>Single-line comment start</td></tr>
+                <tr><td class="mono">_</td><td>Valid in identifier names</td></tr>
+                <tr><td class="mono">space, \t, \n, \r</td><td>Whitespace — skipped</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="warn-box">⚠ Characters outside this alphabet (e.g. <span class="inline-code">@</span>, <span class="inline-code">$</span>, <span class="inline-code">%</span>, <span class="inline-code">-</span>, <span class="inline-code">*</span>) are <strong>illegal</strong> in PixelLang source and raise a LexError at the exact line and column.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 3: KEYWORDS
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="keywords">
+      <div class="section-header">
+        <span class="section-num">§ 03</span>
+        <span class="section-title">Keywords & Reserved Words</span>
+      </div>
+      <p class="section-desc">PixelLang has <strong>8 reserved words</strong>. These are the only valid statement-starting tokens. They are always uppercase. A user cannot use these strings as variable names. The lexer matches them via the <span class="inline-code">RESERVED_WORDS</span> dictionary before checking if a word is an identifier.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Keyword</th><th>Token type</th><th>Syntax</th><th>Purpose</th><th>Args</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>1</td><td class="mono" style="color:#b0a6ff">CANVAS</td><td class="mono">TokenType.CANVAS</td>
+              <td class="mono">CANVAS W H ;</td>
+              <td>Declare canvas size. <strong>Must be first statement.</strong></td>
+              <td class="mono">W:int H:int</td>
+            </tr>
+            <tr>
+              <td>2</td><td class="mono" style="color:#5ddbbc">PIXEL</td><td class="mono">TokenType.PIXEL</td>
+              <td class="mono">PIXEL x y #COLOR ;</td>
+              <td>Place a single pixel at coordinate (x, y).</td>
+              <td class="mono">x:int y:int c:color</td>
+            </tr>
+            <tr>
+              <td>3</td><td class="mono" style="color:#f5a623">RECT</td><td class="mono">TokenType.RECT</td>
+              <td class="mono">RECT x y w h #COLOR ;</td>
+              <td>Draw a filled rectangle at (x,y) of size w×h.</td>
+              <td class="mono">x y w h:int c:color</td>
+            </tr>
+            <tr>
+              <td>4</td><td class="mono" style="color:#f07cae">LINE</td><td class="mono">TokenType.LINE</td>
+              <td class="mono">LINE x1 y1 x2 y2 #COLOR ;</td>
+              <td>Draw a straight line from (x1,y1) to (x2,y2).</td>
+              <td class="mono">x1 y1 x2 y2:int c:color</td>
+            </tr>
+            <tr>
+              <td>5</td><td class="mono" style="color:#64b5f6">CIRCLE</td><td class="mono">TokenType.CIRCLE</td>
+              <td class="mono">CIRCLE cx cy r #COLOR ;</td>
+              <td>Draw a filled circle centered at (cx,cy) with radius r.</td>
+              <td class="mono">cx cy r:int c:color</td>
+            </tr>
+            <tr>
+              <td>6</td><td class="mono" style="color:#69d88a">LOOP</td><td class="mono">TokenType.LOOP</td>
+              <td class="mono">LOOP n { stmt* }</td>
+              <td>Repeat a block of statements n times. No semicolon — uses braces.</td>
+              <td class="mono">n:int body:block</td>
+            </tr>
+            <tr>
+              <td>7</td><td class="mono" style="color:#f07070">TRANSLATE</td><td class="mono">TokenType.TRANSLATE</td>
+              <td class="mono">TRANSLATE dx dy ;</td>
+              <td>Shift the drawing origin by (dx, dy). Accumulates inside loops.</td>
+              <td class="mono">dx:int dy:int</td>
+            </tr>
+            <tr>
+              <td>8</td><td class="mono" style="color:#9896b0">ROTATE</td><td class="mono">TokenType.ROTATE</td>
+              <td class="mono">ROTATE angle ;</td>
+              <td>Rotate drawing context by angle degrees (0–360).</td>
+              <td class="mono">angle:int</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>RESERVED_WORDS dictionary (implementation)</h3>
+      <pre><span class="cm"># lexer.py — this dict drives keyword recognition</span>
+<span class="ann">RESERVED_WORDS</span>: dict[str, <span class="fn">TokenType</span>] = {
+    <span class="str">"CANVAS"</span>:    <span class="fn">TokenType</span>.CANVAS,
+    <span class="str">"PIXEL"</span>:     <span class="fn">TokenType</span>.PIXEL,
+    <span class="str">"RECT"</span>:      <span class="fn">TokenType</span>.RECT,
+    <span class="str">"LINE"</span>:      <span class="fn">TokenType</span>.LINE,
+    <span class="str">"CIRCLE"</span>:    <span class="fn">TokenType</span>.CIRCLE,
+    <span class="str">"LOOP"</span>:      <span class="fn">TokenType</span>.LOOP,
+    <span class="str">"TRANSLATE"</span>: <span class="fn">TokenType</span>.TRANSLATE,
+    <span class="str">"ROTATE"</span>:    <span class="fn">TokenType</span>.ROTATE,
+}
+
+<span class="cm"># In read_word(), after consuming the word:
+# token_type = RESERVED_WORDS.get(word, TokenType.IDENT)
+# If word is in dict → keyword token
+# If word is NOT in dict → IDENT token (user-defined name)</span></pre>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 4: IDENTIFIERS
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="identifiers">
+      <div class="section-header">
+        <span class="section-num">§ 04</span>
+        <span class="section-title">Identifiers</span>
+      </div>
+      <p class="section-desc">An identifier is any name that matches the pattern <span class="inline-code">[a-zA-Z_][a-zA-Z0-9_]*</span> AND is not a keyword. PixelLang v1 does not have user variables — identifiers are tokenized but will cause a ParseError if they appear as a statement. They are defined here for completeness and for future language versions.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><span style="background:#69d88a"></span>Valid identifiers</div>
+          <pre style="margin:0"><span class="str">myColor</span>
+<span class="str">x1</span>
+<span class="str">offset_x</span>
+<span class="str">_private</span>
+<span class="str">CamelCase</span>
+<span class="str">loop_count_2</span></pre>
+        </div>
+        <div class="card">
+          <div class="card-title"><span style="background:#f07070"></span>Invalid identifiers</div>
+          <pre style="margin:0"><span class="var">1abc</span>       <span class="cm">← starts with digit</span>
+<span class="var">my-var</span>    <span class="cm">← hyphen not allowed</span>
+<span class="var">my var</span>    <span class="cm">← space splits it</span>
+<span class="var">#color</span>    <span class="cm">← # is color prefix</span>
+<span class="var">PIXEL</span>     <span class="cm">← reserved word</span>
+<span class="var">LOOP</span>      <span class="cm">← reserved word</span></pre>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Property</th><th>Reserved word</th><th>Identifier (IDENT)</th></tr></thead>
+          <tbody>
+            <tr><td>Examples</td><td class="mono">PIXEL, LOOP, RECT</td><td class="mono">myVar, x1, offset</td></tr>
+            <tr><td>Can user redefine?</td><td class="err">No — locked by language</td><td class="ok">Yes — user names them</td></tr>
+            <tr><td>TokenType emitted</td><td class="mono">TokenType.PIXEL etc.</td><td class="mono">TokenType.IDENT</td></tr>
+            <tr><td>Valid as statement start?</td><td class="ok">Yes — drives parsing</td><td class="err">No — ParseError in v1</td></tr>
+            <tr><td>Case sensitivity</td><td class="warn">Must be ALL CAPS</td><td>Mixed case OK</td></tr>
+            <tr><td>Pattern</td><td class="mono">exact string match</td><td class="mono">[a-zA-Z_][a-zA-Z0-9_]*</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">In Theory of Automata terms, identifiers are described by the regular language: L = { w ∈ Σ* | w matches [a-zA-Z_][a-zA-Z0-9_]* AND w ∉ RESERVED_WORDS }. The set of reserved words is finite — it is subtracted from the general identifier language.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 5: TOKENS & LEXEMES
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="tokens">
+      <div class="section-header">
+        <span class="section-num">§ 05</span>
+        <span class="section-title">Complete Token Specification</span>
+      </div>
+      <p class="section-desc">Every token has three components: its <strong>type</strong> (from the TokenType enum), its <strong>lexeme</strong> (the raw source characters), and its <strong>position</strong> (line, col). The Token dataclass stores all three.</p>
+
+      <pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> enum <span class="kw">import</span> Enum, auto
+
+<span class="kw">class</span> <span class="fn">TokenType</span>(Enum):
+    <span class="cm"># Keywords (8)</span>
+    CANVAS = auto();    PIXEL = auto();    RECT = auto()
+    LINE = auto();      CIRCLE = auto();   LOOP = auto()
+    TRANSLATE = auto(); ROTATE = auto()
+    <span class="cm"># Literals (2)</span>
+    NUMBER = auto();    COLOR = auto()
+    <span class="cm"># Identifier (1)</span>
+    IDENT = auto()
+    <span class="cm"># Punctuation (3)</span>
+    LBRACE = auto();    RBRACE = auto();   SEMICOLON = auto()
+    <span class="cm"># Sentinel (1)</span>
+    EOF = auto()
+
+@dataclass
+<span class="kw">class</span> <span class="fn">Token</span>:
+    type:  TokenType
+    value: str     <span class="cm"># the lexeme (raw text)</span>
+    line:  int     <span class="cm"># 1-based line number</span>
+    col:   int     <span class="cm"># 1-based column number</span></pre>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Token type</th><th>Lexeme example</th><th>Regex / Pattern</th><th>Category</th><th>How lexer produces it</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">CANVAS</td><td class="mono">CANVAS</td><td class="mono">exact: "CANVAS"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">PIXEL</td><td class="mono">PIXEL</td><td class="mono">exact: "PIXEL"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">RECT</td><td class="mono">RECT</td><td class="mono">exact: "RECT"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">LINE</td><td class="mono">LINE</td><td class="mono">exact: "LINE"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">CIRCLE</td><td class="mono">CIRCLE</td><td class="mono">exact: "CIRCLE"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">LOOP</td><td class="mono">LOOP</td><td class="mono">exact: "LOOP"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">TRANSLATE</td><td class="mono">TRANSLATE</td><td class="mono">exact: "TRANSLATE"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">ROTATE</td><td class="mono">ROTATE</td><td class="mono">exact: "ROTATE"</td><td><span class="pill pill-pu">Keyword</span></td><td>read_word() → dict hit</td></tr>
+            <tr><td class="mono">NUMBER</td><td class="mono">0, 5, 255, 1024</td><td class="mono">[0-9]+</td><td><span class="pill pill-te">Literal</span></td><td>read_number()</td></tr>
+            <tr><td class="mono">COLOR</td><td class="mono">#FF0000, #00ff88</td><td class="mono">#[0-9A-Fa-f]{6}</td><td><span class="pill pill-te">Literal</span></td><td>read_color()</td></tr>
+            <tr><td class="mono">IDENT</td><td class="mono">myVar, x1, offset</td><td class="mono">[a-zA-Z_][a-zA-Z0-9_]*</td><td><span class="pill pill-am">Identifier</span></td><td>read_word() → dict miss</td></tr>
+            <tr><td class="mono">LBRACE</td><td class="mono">{</td><td class="mono">literal: {</td><td><span class="pill pill-gy">Punctuation</span></td><td>single char branch</td></tr>
+            <tr><td class="mono">RBRACE</td><td class="mono">}</td><td class="mono">literal: }</td><td><span class="pill pill-gy">Punctuation</span></td><td>single char branch</td></tr>
+            <tr><td class="mono">SEMICOLON</td><td class="mono">;</td><td class="mono">literal: ;</td><td><span class="pill pill-gy">Punctuation</span></td><td>single char branch</td></tr>
+            <tr><td class="mono">EOF</td><td class="mono">(end of file)</td><td>—</td><td><span class="pill pill-gy">Sentinel</span></td><td>end of source string</td></tr>
+            <tr><td class="mono">(COMMENT)</td><td class="mono">// red pixel</td><td class="mono">//[^\n]*</td><td><span class="pill pill-gy">Skipped</span></td><td>skip_comment() → discarded</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Token stream example</h3>
+      <p>Source line: <span class="inline-code">LOOP 3 { PIXEL 0 0 #FF0000; }</span></p>
+      <pre><span class="ann">Token(LOOP,      "LOOP",    line=1, col=1)</span>
+<span class="num">Token(NUMBER,    "3",       line=1, col=6)</span>
+<span class="op">Token(LBRACE,   "{",       line=1, col=8)</span>
+<span class="kw">Token(PIXEL,     "PIXEL",   line=1, col=10)</span>
+<span class="num">Token(NUMBER,    "0",       line=1, col=16)</span>
+<span class="num">Token(NUMBER,    "0",       line=1, col=18)</span>
+<span class="str">Token(COLOR,     "#FF0000", line=1, col=20)</span>
+<span class="op">Token(SEMICOLON, ";",       line=1, col=27)</span>
+<span class="op">Token(RBRACE,   "}",       line=1, col=29)</span></pre>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 6: DFA / AUTOMATA
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="dfa">
+      <div class="section-header">
+        <span class="section-num">§ 06</span>
+        <span class="section-title">Finite Automata — DFA for the Lexer</span>
+      </div>
+      <p class="section-desc">The lexer is a Deterministic Finite Automaton (DFA). Each token category corresponds to a mini-DFA. The lexer starts in state q0 and transitions based on the current character. Accepting states produce tokens.</p>
+
+      <h3>DFA states and transitions</h3>
+
+      <div class="card">
+        <div class="card-title"><span style="background:#b0a6ff"></span>DFA for NUMBER token — [0-9]+</div>
+        <pre>q0 ──[digit]──► q1 ──[digit]──► q1 (accept)
+                        └──[other]──► ACCEPT: emit NUMBER, unget char
+
+States:
+  q0 = start state
+  q1 = reading digits (accepting state)
+  
+Transition table:
+  State │ digit  │ other
+  ──────┼────────┼──────────────────
+  q0    │  → q1  │  (error: not a number)
+  q1    │  → q1  │  → ACCEPT (emit NUMBER)</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span style="background:#5ddbbc"></span>DFA for COLOR token — #[0-9A-Fa-f]{6}</div>
+        <pre>q0 ──[#]──► q1 ──[hex]──► q2 ──[hex]──► q3 ──[hex]──► q4
+                                                            │
+                        q7(accept) ◄──[hex]── q6 ◄──[hex]─ q5 ◄──[hex]──┘
+
+States:
+  q0 = start
+  q1 = seen '#'
+  q2–q6 = seen 1–5 hex digits
+  q7 = seen 6 hex digits → ACCEPT: emit COLOR
+
+Any non-hex character before q7 → LexError("Invalid color")</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span style="background:#f5a623"></span>DFA for WORD (keyword or identifier)</div>
+        <pre>q0 ──[letter|_]──► q1 ──[letter|digit|_]──► q1 (accept)
+                           └──[other]──► ACCEPT: lookup RESERVED_WORDS
+                                         if found → emit keyword token
+                                         else    → emit IDENT token
+
+States:
+  q0 = start
+  q1 = reading word characters (accepting state)
+  
+After accepting q1, the word string is looked up in RESERVED_WORDS dict.</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span style="background:#f07cae"></span>Main Lexer DFA — token dispatch</div>
+        <pre>q0 (start)
+  ├──[a-zA-Z_]  ──► read_word()   → TOKEN (keyword or IDENT)
+  ├──[0-9]       ──► read_number() → NUMBER
+  ├──[#]         ──► read_color()  → COLOR
+  ├──[{]         ──► emit LBRACE
+  ├──[}]         ──► emit RBRACE
+  ├──[;]         ──► emit SEMICOLON
+  ├──[/][/]      ──► skip_comment() → skip to \n, restart
+  ├──[ \t\n\r]   ──► skip_whitespace(), restart
+  ├──[EOF]       ──► emit EOF
+  └──[anything else] ──► LexError("Unknown character")</pre>
+      </div>
+
+      <div class="note">From automata theory: each sub-DFA above defines a <strong>regular language</strong>. The union of all these regular languages forms the complete lexical specification of PixelLang. Regular languages are recognized by DFAs and described by regular expressions — exactly what a lexer implements.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 7: GRAMMAR
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="grammar">
+      <div class="section-header">
+        <span class="section-num">§ 07</span>
+        <span class="section-title">Formal Grammar — BNF & EBNF</span>
+      </div>
+      <p class="section-desc">PixelLang's grammar is a <strong>Context-Free Grammar (CFG)</strong> expressed in Backus-Naur Form (BNF). It is <strong>LL(1)</strong>: no ambiguity, no left recursion, and every production can be selected with exactly one token of lookahead. The grammar defines the syntactic structure of all valid PixelLang programs.</p>
+
+      <h3>BNF Grammar — complete specification</h3>
+
+      <div class="rule-block">
+<span class="cm">&lt;!-- Terminals are in UPPERCASE. Non-terminals are in &lt;angle brackets&gt; --&gt;</span>
+
+<span class="ann">&lt;program&gt;</span>       <span class="op">::=</span> <span class="kw">&lt;statement&gt;</span>* EOF
+
+<span class="ann">&lt;statement&gt;</span>     <span class="op">::=</span> <span class="kw">&lt;canvas_stmt&gt;</span>
+                 <span class="op">|</span>   <span class="kw">&lt;pixel_stmt&gt;</span>
+                 <span class="op">|</span>   <span class="kw">&lt;rect_stmt&gt;</span>
+                 <span class="op">|</span>   <span class="kw">&lt;line_stmt&gt;</span>
+                 <span class="op">|</span>   <span class="kw">&lt;circle_stmt&gt;</span>
+                 <span class="op">|</span>   <span class="kw">&lt;loop_stmt&gt;</span>
+                 <span class="op">|</span>   <span class="kw">&lt;translate_stmt&gt;</span>
+                 <span class="op">|</span>   <span class="kw">&lt;rotate_stmt&gt;</span>
+
+<span class="ann">&lt;canvas_stmt&gt;</span>   <span class="op">::=</span> <span class="str">CANVAS</span>    NUMBER NUMBER                         SEMICOLON
+<span class="ann">&lt;pixel_stmt&gt;</span>    <span class="op">::=</span> <span class="str">PIXEL</span>     NUMBER NUMBER              COLOR     SEMICOLON
+<span class="ann">&lt;rect_stmt&gt;</span>     <span class="op">::=</span> <span class="str">RECT</span>      NUMBER NUMBER NUMBER NUMBER COLOR     SEMICOLON
+<span class="ann">&lt;line_stmt&gt;</span>     <span class="op">::=</span> <span class="str">LINE</span>      NUMBER NUMBER NUMBER NUMBER COLOR     SEMICOLON
+<span class="ann">&lt;circle_stmt&gt;</span>   <span class="op">::=</span> <span class="str">CIRCLE</span>    NUMBER NUMBER NUMBER        COLOR     SEMICOLON
+<span class="ann">&lt;loop_stmt&gt;</span>     <span class="op">::=</span> <span class="str">LOOP</span>      NUMBER LBRACE <span class="kw">&lt;statement&gt;</span>* RBRACE
+<span class="ann">&lt;translate_stmt&gt;</span> <span class="op">::=</span> <span class="str">TRANSLATE</span> NUMBER NUMBER                         SEMICOLON
+<span class="ann">&lt;rotate_stmt&gt;</span>   <span class="op">::=</span> <span class="str">ROTATE</span>    NUMBER                                  SEMICOLON
+
+<span class="cm">-- Terminals --
+NUMBER   ::=  [0-9]+
+COLOR    ::=  '#' [0-9A-Fa-f]{6}
+LBRACE   ::=  '{'
+RBRACE   ::=  '}'
+SEMICOLON ::= ';'
+EOF      ::=  end-of-input</span>
+      </div>
+
+      <h3>EBNF (Extended BNF) — equivalent form</h3>
+      <div class="rule-block">
+<span class="cm">(* EBNF uses { } for repetition, [ ] for optional, | for choice *)</span>
+
+program    = { statement } EOF ;
+statement  = canvas_stmt | pixel_stmt | rect_stmt | line_stmt
+           | circle_stmt | loop_stmt  | translate_stmt | rotate_stmt ;
+
+canvas_stmt    = "CANVAS"    number number ";" ;
+pixel_stmt     = "PIXEL"     number number color ";" ;
+rect_stmt      = "RECT"      number number number number color ";" ;
+line_stmt      = "LINE"      number number number number color ";" ;
+circle_stmt    = "CIRCLE"    number number number color ";" ;
+loop_stmt      = "LOOP"      number "{" { statement } "}" ;
+translate_stmt = "TRANSLATE" number number ";" ;
+rotate_stmt    = "ROTATE"    number ";" ;
+
+number = digit { digit } ;
+digit  = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+color  = "#" hex hex hex hex hex hex ;
+hex    = digit | "A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f" ;
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Property</th><th>Value for PixelLang</th></tr></thead>
+          <tbody>
+            <tr><td>Grammar type</td><td class="ok">Context-Free Grammar (CFG) — Type 2 in Chomsky hierarchy</td></tr>
+            <tr><td>Parser class</td><td class="ok">LL(1) — top-down, left-to-right, 1-token lookahead</td></tr>
+            <tr><td>Ambiguous?</td><td class="ok">No — each statement rule starts with a unique keyword</td></tr>
+            <tr><td>Left-recursive?</td><td class="ok">No — safe for recursive descent</td></tr>
+            <tr><td>Number of productions</td><td>10 (1 program + 1 statement + 8 stmt rules)</td></tr>
+            <tr><td>Non-terminals</td><td>10 (program, statement, 8 stmt types)</td></tr>
+            <tr><td>Terminals</td><td>15 (8 keywords + NUMBER + COLOR + { } ; EOF)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 8: FIRST & FOLLOW
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="first-follow">
+      <div class="section-header">
+        <span class="section-num">§ 08</span>
+        <span class="section-title">FIRST & FOLLOW Sets</span>
+      </div>
+      <p class="section-desc"><strong>FIRST(A)</strong> is the set of terminal tokens that can begin any string derived from non-terminal A. <strong>FOLLOW(A)</strong> is the set of tokens that can appear immediately after A in any sentential form. These sets are used to build the LL(1) parse table.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><span style="background:#b0a6ff"></span>FIRST sets</div>
+          <div class="set-row">
+            <span class="set-lhs">FIRST(program)</span>
+            <div class="set-vals">
+              <span class="pill pill-pu">CANVAS</span><span class="pill pill-pu">PIXEL</span><span class="pill pill-pu">RECT</span>
+              <span class="pill pill-pu">LINE</span><span class="pill pill-pu">CIRCLE</span><span class="pill pill-pu">LOOP</span>
+              <span class="pill pill-pu">TRANSLATE</span><span class="pill pill-pu">ROTATE</span><span class="pill pill-gy">EOF</span>
+            </div>
+          </div>
+          <div class="set-row">
+            <span class="set-lhs">FIRST(statement)</span>
+            <div class="set-vals">
+              <span class="pill pill-pu">CANVAS</span><span class="pill pill-pu">PIXEL</span><span class="pill pill-pu">RECT</span>
+              <span class="pill pill-pu">LINE</span><span class="pill pill-pu">CIRCLE</span><span class="pill pill-pu">LOOP</span>
+              <span class="pill pill-pu">TRANSLATE</span><span class="pill pill-pu">ROTATE</span>
+            </div>
+          </div>
+          <div class="set-row"><span class="set-lhs">FIRST(canvas_stmt)</span><div class="set-vals"><span class="pill pill-te">CANVAS</span></div></div>
+          <div class="set-row"><span class="set-lhs">FIRST(pixel_stmt)</span><div class="set-vals"><span class="pill pill-te">PIXEL</span></div></div>
+          <div class="set-row"><span class="set-lhs">FIRST(rect_stmt)</span><div class="set-vals"><span class="pill pill-te">RECT</span></div></div>
+          <div class="set-row"><span class="set-lhs">FIRST(line_stmt)</span><div class="set-vals"><span class="pill pill-te">LINE</span></div></div>
+          <div class="set-row"><span class="set-lhs">FIRST(circle_stmt)</span><div class="set-vals"><span class="pill pill-te">CIRCLE</span></div></div>
+          <div class="set-row"><span class="set-lhs">FIRST(loop_stmt)</span><div class="set-vals"><span class="pill pill-te">LOOP</span></div></div>
+          <div class="set-row"><span class="set-lhs">FIRST(translate_stmt)</span><div class="set-vals"><span class="pill pill-te">TRANSLATE</span></div></div>
+          <div class="set-row"><span class="set-lhs">FIRST(rotate_stmt)</span><div class="set-vals"><span class="pill pill-te">ROTATE</span></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span style="background:#5ddbbc"></span>FOLLOW sets</div>
+          <div class="set-row">
+            <span class="set-lhs">FOLLOW(program)</span>
+            <div class="set-vals"><span class="pill pill-gy">EOF</span></div>
+          </div>
+          <div class="set-row">
+            <span class="set-lhs">FOLLOW(statement)</span>
+            <div class="set-vals">
+              <span class="pill pill-pu">CANVAS</span><span class="pill pill-pu">PIXEL</span><span class="pill pill-pu">RECT</span>
+              <span class="pill pill-pu">LINE</span><span class="pill pill-pu">CIRCLE</span><span class="pill pill-pu">LOOP</span>
+              <span class="pill pill-pu">TRANSLATE</span><span class="pill pill-pu">ROTATE</span>
+              <span class="pill pill-gy">RBRACE</span><span class="pill pill-gy">EOF</span>
+            </div>
+          </div>
+          <div class="set-row"><span class="set-lhs">FOLLOW(canvas_stmt)</span><div class="set-vals">= FOLLOW(statement)</div></div>
+          <div class="set-row"><span class="set-lhs">FOLLOW(pixel_stmt)</span><div class="set-vals">= FOLLOW(statement)</div></div>
+          <div class="set-row"><span class="set-lhs">FOLLOW(rect_stmt)</span><div class="set-vals">= FOLLOW(statement)</div></div>
+          <div class="set-row"><span class="set-lhs">FOLLOW(loop_stmt)</span><div class="set-vals">= FOLLOW(statement)</div></div>
+          <div class="set-row"><span class="set-lhs">FOLLOW(translate_stmt)</span><div class="set-vals">= FOLLOW(statement)</div></div>
+          <div class="set-row"><span class="set-lhs">FOLLOW(rotate_stmt)</span><div class="set-vals">= FOLLOW(statement)</div></div>
+        </div>
+      </div>
+
+      <div class="note">LL(1) condition: For every non-terminal A with multiple productions A → α | β, FIRST(α) ∩ FIRST(β) must be empty (no overlap). In PixelLang, every statement alternative begins with a <strong>distinct keyword</strong>, so all FIRST sets are disjoint — this confirms PixelLang is LL(1).</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 9: LL(1) PARSE TABLE
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="parse-table">
+      <div class="section-header">
+        <span class="section-num">§ 09</span>
+        <span class="section-title">LL(1) Predictive Parse Table</span>
+      </div>
+      <p class="section-desc">The parse table M[A, a] tells the parser: "when you are trying to expand non-terminal A and the current lookahead token is a, use this production rule." A blank cell means syntax error.</p>
+
+      <div class="tbl-wrap">
+        <table class="parse-table">
+          <thead>
+            <tr>
+              <th>Non-terminal</th>
+              <th>CANVAS</th><th>PIXEL</th><th>RECT</th><th>LINE</th>
+              <th>CIRCLE</th><th>LOOP</th><th>TRANSLATE</th><th>ROTATE</th>
+              <th>RBRACE</th><th>EOF</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="accent">program</td>
+              <td colspan="8" style="color:#69d88a;font-family:var(--mono);font-size:11px">{ statement* } EOF — any of the 8 keywords starts a statement</td>
+              <td class="empty">—</td><td style="color:#69d88a;font-family:var(--mono);font-size:11px">ε (empty)</td>
+            </tr>
+            <tr>
+              <td class="accent">statement</td>
+              <td>canvas_stmt</td><td>pixel_stmt</td><td>rect_stmt</td><td>line_stmt</td>
+              <td>circle_stmt</td><td>loop_stmt</td><td>translate_stmt</td><td>rotate_stmt</td>
+              <td class="err-cell">error</td><td class="err-cell">error</td>
+            </tr>
+            <tr>
+              <td class="accent">canvas_stmt</td>
+              <td style="color:#f5a623;font-family:var(--mono);font-size:11px">CANVAS N N ;</td>
+              <td class="empty">—</td><td class="empty">—</td><td class="empty">—</td>
+              <td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td>
+              <td class="err-cell">error</td><td class="err-cell">error</td>
+            </tr>
+            <tr>
+              <td class="accent">pixel_stmt</td>
+              <td class="empty">—</td>
+              <td style="color:#f5a623;font-family:var(--mono);font-size:11px">PIXEL N N C ;</td>
+              <td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td>
+              <td class="err-cell">error</td><td class="err-cell">error</td>
+            </tr>
+            <tr>
+              <td class="accent">rect_stmt</td>
+              <td class="empty">—</td><td class="empty">—</td>
+              <td style="color:#f5a623;font-family:var(--mono);font-size:11px">RECT N N N N C ;</td>
+              <td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td>
+              <td class="err-cell">error</td><td class="err-cell">error</td>
+            </tr>
+            <tr>
+              <td class="accent">loop_stmt</td>
+              <td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td>
+              <td style="color:#f5a623;font-family:var(--mono);font-size:11px">LOOP N { S* }</td>
+              <td class="empty">—</td><td class="empty">—</td>
+              <td class="err-cell">error</td><td class="err-cell">error</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Lookahead dispatch — parse_statement() implementation</h3>
+      <pre><span class="kw">def</span> <span class="fn">parse_statement</span>(self) -> ASTNode:
+    tok = self.current()    <span class="cm"># THIS is the 1-token lookahead</span>
+
+    <span class="cm"># LL(1) dispatch table implemented as if-elif chain</span>
+    <span class="kw">if</span>   tok.type == <span class="fn">TokenType</span>.CANVAS:     <span class="kw">return</span> self.<span class="fn">parse_canvas</span>()
+    <span class="kw">elif</span> tok.type == <span class="fn">TokenType</span>.PIXEL:      <span class="kw">return</span> self.<span class="fn">parse_pixel</span>()
+    <span class="kw">elif</span> tok.type == <span class="fn">TokenType</span>.RECT:       <span class="kw">return</span> self.<span class="fn">parse_rect</span>()
+    <span class="kw">elif</span> tok.type == <span class="fn">TokenType</span>.LINE:       <span class="kw">return</span> self.<span class="fn">parse_line</span>()
+    <span class="kw">elif</span> tok.type == <span class="fn">TokenType</span>.CIRCLE:     <span class="kw">return</span> self.<span class="fn">parse_circle</span>()
+    <span class="kw">elif</span> tok.type == <span class="fn">TokenType</span>.LOOP:       <span class="kw">return</span> self.<span class="fn">parse_loop</span>()
+    <span class="kw">elif</span> tok.type == <span class="fn">TokenType</span>.TRANSLATE:  <span class="kw">return</span> self.<span class="fn">parse_translate</span>()
+    <span class="kw">elif</span> tok.type == <span class="fn">TokenType</span>.ROTATE:     <span class="kw">return</span> self.<span class="fn">parse_rotate</span>()
+    <span class="kw">else</span>:
+        <span class="kw">raise</span> ParseError(
+            <span class="str">f"Unexpected token '{tok.value}' — expected a drawing command"</span>,
+            tok.line, tok.col)</pre>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 10: PARSE TREE & AST
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="parse-tree">
+      <div class="section-header">
+        <span class="section-num">§ 10</span>
+        <span class="section-title">Parse Tree & Abstract Syntax Tree (AST)</span>
+      </div>
+      <p class="section-desc">The <strong>parse tree</strong> (concrete syntax tree) includes every token including punctuation. The <strong>AST</strong> strips away noise (semicolons, braces) and keeps only semantically meaningful nodes. The compiler works with the AST, not the parse tree.</p>
+
+      <h3>Parse tree vs AST — side by side</h3>
+      <p>Source: <span class="inline-code">LOOP 3 { PIXEL 0 0 #FF0000; TRANSLATE 1 1; }</span></p>
+
+      <div class="grid2">
+        <div>
+          <h4>// Parse tree (concrete)</h4>
+          <div class="tree">
+<span class="tree-line">└─</span> <span class="node-name">loop_stmt</span>
+   <span class="tree-line">├─</span> <span class="node-field">LOOP</span> <span class="node-val">"LOOP"</span>
+   <span class="tree-line">├─</span> <span class="node-field">NUMBER</span> <span class="node-val">"3"</span>
+   <span class="tree-line">├─</span> <span class="node-field">LBRACE</span> <span class="node-val">"{"</span>
+   <span class="tree-line">├─</span> <span class="node-name">statement*</span>
+   <span class="tree-line">│  ├─</span> <span class="node-name">pixel_stmt</span>
+   <span class="tree-line">│  │  ├─</span> <span class="node-field">PIXEL</span>  <span class="node-val">"PIXEL"</span>
+   <span class="tree-line">│  │  ├─</span> <span class="node-field">NUMBER</span> <span class="node-val">"0"</span>
+   <span class="tree-line">│  │  ├─</span> <span class="node-field">NUMBER</span> <span class="node-val">"0"</span>
+   <span class="tree-line">│  │  ├─</span> <span class="node-field">COLOR</span>  <span class="node-val">"#FF0000"</span>
+   <span class="tree-line">│  │  └─</span> <span class="node-field">SEMICOLON</span> <span class="node-val">";"</span>
+   <span class="tree-line">│  └─</span> <span class="node-name">translate_stmt</span>
+   <span class="tree-line">│     ├─</span> <span class="node-field">TRANSLATE</span> <span class="node-val">"TRANSLATE"</span>
+   <span class="tree-line">│     ├─</span> <span class="node-field">NUMBER</span> <span class="node-val">"1"</span>
+   <span class="tree-line">│     ├─</span> <span class="node-field">NUMBER</span> <span class="node-val">"1"</span>
+   <span class="tree-line">│     └─</span> <span class="node-field">SEMICOLON</span> <span class="node-val">";"</span>
+   <span class="tree-line">└─</span> <span class="node-field">RBRACE</span> <span class="node-val">"}"</span>
+          </div>
+        </div>
+        <div>
+          <h4>// AST (abstract — stripped)</h4>
+          <div class="tree">
+<span class="tree-line">└─</span> <span class="node-name">LoopNode</span>
+   <span class="tree-line">├─</span> <span class="node-field">count</span> = <span class="node-val">3</span>
+   <span class="tree-line">├─</span> <span class="node-field">line</span>  = <span class="node-val">1</span>
+   <span class="tree-line">└─</span> <span class="node-field">body</span>:
+      <span class="tree-line">├─</span> <span class="node-name">PixelNode</span>
+      <span class="tree-line">│  ├─</span> <span class="node-field">x</span>     = <span class="node-val">0</span>
+      <span class="tree-line">│  ├─</span> <span class="node-field">y</span>     = <span class="node-val">0</span>
+      <span class="tree-line">│  ├─</span> <span class="node-field">color</span> = <span class="node-val">"#FF0000"</span>
+      <span class="tree-line">│  └─</span> <span class="node-field">line</span>  = <span class="node-val">1</span>
+      <span class="tree-line">└─</span> <span class="node-name">TranslateNode</span>
+         <span class="tree-line">├─</span> <span class="node-field">dx</span>   = <span class="node-val">1</span>
+         <span class="tree-line">├─</span> <span class="node-field">dy</span>   = <span class="node-val">1</span>
+         <span class="tree-line">└─</span> <span class="node-field">line</span> = <span class="node-val">2</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>All AST node classes</h3>
+      <pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+<span class="kw">from</span> typing <span class="kw">import</span> List
+<span class="kw">from</span> abc <span class="kw">import</span> ABC, abstractmethod
+
+<span class="kw">class</span> <span class="fn">ASTNode</span>(ABC):
+    @abstractmethod
+    <span class="kw">def</span> <span class="fn">accept</span>(self, visitor): <span class="kw">pass</span>
+
+@dataclass
+<span class="kw">class</span> <span class="fn">ProgramNode</span>(ASTNode):
+    statements: List[ASTNode]
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_ProgramNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">CanvasNode</span>(ASTNode):
+    width: int; height: int; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_CanvasNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">PixelNode</span>(ASTNode):
+    x: int; y: int; color: str; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_PixelNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">RectNode</span>(ASTNode):
+    x: int; y: int; w: int; h: int; color: str; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_RectNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">LineNode</span>(ASTNode):
+    x1: int; y1: int; x2: int; y2: int; color: str; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_LineNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">CircleNode</span>(ASTNode):
+    cx: int; cy: int; radius: int; color: str; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_CircleNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">LoopNode</span>(ASTNode):
+    count: int; body: List[ASTNode]; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_LoopNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">TranslateNode</span>(ASTNode):
+    dx: int; dy: int; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_TranslateNode</span>(self)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">RotateNode</span>(ASTNode):
+    angle: int; line: int
+    <span class="kw">def</span> <span class="fn">accept</span>(self, v): <span class="kw">return</span> v.<span class="fn">visit_RotateNode</span>(self)</pre>
+
+      <h3>NodeVisitor base class — used by ALL later phases</h3>
+      <pre><span class="kw">class</span> <span class="fn">NodeVisitor</span>:
+    <span class="kw">def</span> <span class="fn">visit</span>(self, node: ASTNode):
+        <span class="cm"># Dynamically dispatch to visit_ClassName</span>
+        method = <span class="str">f"visit_{type(node).__name__}"</span>
+        visitor_fn = getattr(self, method, self.<span class="fn">generic_visit</span>)
+        <span class="kw">return</span> visitor_fn(node)
+
+    <span class="kw">def</span> <span class="fn">generic_visit</span>(self, node):
+        <span class="kw">raise</span> NotImplementedError(<span class="str">f"No visit_{type(node).__name__}"</span>)
+
+<span class="cm"># SemanticAnalyzer(NodeVisitor):  checks rules — never draws
+# CodeGenerator(NodeVisitor):     draws to PIL — never checks
+# PrettyPrinter(NodeVisitor):     prints AST — for debugging
+# Each phase adds ONLY its own visit_* methods, AST nodes untouched.</span></pre>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 11: SYMBOL TABLE
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="symtable">
+      <div class="section-header">
+        <span class="section-num">§ 11</span>
+        <span class="section-title">Symbol Table</span>
+      </div>
+      <p class="section-desc">The symbol table stores all <em>named</em> information the compiler accumulates during a traversal of the AST. In PixelLang it records canvas dimensions, transform state (tx, ty, rotation), and loop scope depth. It is a <strong>stack-based scoped symbol table</strong> — a new scope is pushed on every LOOP entry and popped on LOOP exit.</p>
+
+      <h3>Symbol entry structure</h3>
+      <pre>@dataclass
+<span class="kw">class</span> <span class="fn">Symbol</span>:
+    name:        str    <span class="cm"># "canvas" | "tx" | "ty" | "angle" | "loop_i"</span>
+    kind:        str    <span class="cm"># "canvas" | "transform" | "loop_counter"</span>
+    value:       any    <span class="cm"># current value of the symbol</span>
+    value_type:  str    <span class="cm"># "int" | "tuple" | "color"</span>
+    defined_at:  int    <span class="cm"># source line number</span>
+    scope_depth: int    <span class="cm"># 0 = global, 1 = loop1, 2 = nested loop2...</span>
+
+<span class="kw">class</span> <span class="fn">SymbolTable</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.scopes: List[dict] = [{}]   <span class="cm"># scope stack; [0] = global</span>
+
+    <span class="kw">def</span> <span class="fn">enter_scope</span>(self):  self.scopes.append({})   <span class="cm"># push on LOOP</span>
+    <span class="kw">def</span> <span class="fn">exit_scope</span>(self):   self.scopes.pop()         <span class="cm"># pop on LOOP end</span>
+    <span class="kw">def</span> <span class="fn">depth</span>(self) -> int: <span class="kw">return</span> len(self.scopes) - <span class="num">1</span>
+
+    <span class="kw">def</span> <span class="fn">define</span>(self, name, kind, value, value_type, line):
+        <span class="kw">if</span> name <span class="kw">in</span> self.scopes[-<span class="num">1</span>]:
+            <span class="kw">raise</span> SymbolError(<span class="str">f"'{name}' already defined in this scope"</span>, line)
+        self.scopes[-<span class="num">1</span>][name] = Symbol(name, kind, value, value_type, line, self.<span class="fn">depth</span>())
+
+    <span class="kw">def</span> <span class="fn">lookup</span>(self, name) -> Symbol:
+        <span class="kw">for</span> scope <span class="kw">in</span> reversed(self.scopes):   <span class="cm"># inner-most first</span>
+            <span class="kw">if</span> name <span class="kw">in</span> scope: <span class="kw">return</span> scope[name]
+        <span class="kw">raise</span> SymbolError(<span class="str">f"Undefined symbol: '{name}'"</span>)
+
+    <span class="kw">def</span> <span class="fn">update</span>(self, name, new_value):
+        <span class="kw">for</span> scope <span class="kw">in</span> reversed(self.scopes):
+            <span class="kw">if</span> name <span class="kw">in</span> scope:
+                scope[name].value = new_value; <span class="kw">return</span>
+        <span class="kw">raise</span> SymbolError(<span class="str">f"Cannot update undefined: '{name}'"</span>)</pre>
+
+      <h3>Symbol table populated from this program</h3>
+      <pre><span class="cm">// Source:
+// CANVAS 20 20;
+// RECT 0 0 5 5 #00FF00;
+// LOOP 3 {
+//     PIXEL 0 0 #0000FF;
+//     TRANSLATE 1 1;
+// }</span></pre>
+
+      <div class="card">
+        <div class="card-title">Scope 0 — global (after CANVAS)</div>
+        <div class="sym-scope">
+          <div class="tbl-wrap" style="margin-top:6px">
+            <table>
+              <thead><tr><th>Name</th><th>Kind</th><th>Value</th><th>Type</th><th>Defined at</th><th>Depth</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">canvas</td><td>canvas</td><td class="mono">(20, 20)</td><td class="mono">tuple</td><td>line 1</td><td>0</td></tr>
+                <tr><td class="mono">tx</td><td>transform</td><td class="mono">0</td><td class="mono">int</td><td>init</td><td>0</td></tr>
+                <tr><td class="mono">ty</td><td>transform</td><td class="mono">0</td><td class="mono">int</td><td>init</td><td>0</td></tr>
+                <tr><td class="mono">angle</td><td>transform</td><td class="mono">0</td><td class="mono">int</td><td>init</td><td>0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-title" style="margin-top:1rem">Scope 1 — pushed on LOOP entry (line 3)</div>
+        <div class="sym-scope scope-1">
+          <div class="tbl-wrap" style="margin-top:6px">
+            <table>
+              <thead><tr><th>Name</th><th>Kind</th><th>Value</th><th>Type</th><th>Defined at</th><th>Depth</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">loop_count</td><td>loop_counter</td><td class="mono">3</td><td class="mono">int</td><td>line 3</td><td>1</td></tr>
+                <tr><td class="mono">loop_iter</td><td>loop_counter</td><td class="mono">0→1→2</td><td class="mono">int</td><td>line 3</td><td>1</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:12px;color:var(--text2);margin-top:6px">↑ This scope is destroyed (popped) when the LOOP block closes with "}".</p>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Symbol name</th><th>When defined</th><th>When updated</th><th>When destroyed</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">canvas</td><td>On CANVAS statement</td><td>Never (immutable)</td><td>End of program</td></tr>
+            <tr><td class="mono">tx, ty</td><td>Program start (init=0)</td><td>On TRANSLATE — values accumulate</td><td>End of program</td></tr>
+            <tr><td class="mono">angle</td><td>Program start (init=0)</td><td>On ROTATE statement</td><td>End of program</td></tr>
+            <tr><td class="mono">loop_count</td><td>On LOOP entry</td><td>Never — fixed at entry</td><td>On LOOP exit (scope pop)</td></tr>
+            <tr><td class="mono">loop_iter</td><td>On LOOP entry</td><td>Each iteration</td><td>On LOOP exit (scope pop)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 12: SEMANTIC ANALYSIS
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="semantic">
+      <div class="section-header">
+        <span class="section-num">§ 12</span>
+        <span class="section-title">Semantic Analysis — All Rules</span>
+      </div>
+      <p class="section-desc">Semantic analysis checks that the program is <em>meaningful</em>, not just grammatically correct. The semantic analyser extends <span class="inline-code">NodeVisitor</span>, walks the entire AST, and collects <strong>all</strong> semantic errors (it does not stop at the first error).</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Rule ID</th><th>Statement</th><th>Condition checked</th><th>Error message if violated</th></tr></thead>
+          <tbody>
+            <tr><td class="pill pill-re">SEM-01</td><td>program</td><td class="warn">CANVAS must be the very first statement in the file</td><td class="err">"CANVAS must be declared before any drawing command"</td></tr>
+            <tr><td class="pill pill-re">SEM-02</td><td>CANVAS</td><td>CANVAS is declared at most once</td><td class="err">"Duplicate CANVAS declaration at line N"</td></tr>
+            <tr><td class="pill pill-re">SEM-03</td><td>CANVAS</td><td>width > 0 AND height > 0</td><td class="err">"Canvas dimensions must be positive integers"</td></tr>
+            <tr><td class="pill pill-re">SEM-04</td><td>PIXEL</td><td>0 ≤ x ≤ canvas_width − 1</td><td class="err">"PIXEL x={x} out of bounds (canvas width={w})"</td></tr>
+            <tr><td class="pill pill-re">SEM-05</td><td>PIXEL</td><td>0 ≤ y ≤ canvas_height − 1</td><td class="err">"PIXEL y={y} out of bounds (canvas height={h})"</td></tr>
+            <tr><td class="pill pill-re">SEM-06</td><td>PIXEL / RECT / LINE / CIRCLE</td><td>color matches regex ^#[0-9A-Fa-f]{6}$</td><td class="err">"Invalid color '{c}' — must be #RRGGBB format"</td></tr>
+            <tr><td class="pill pill-re">SEM-07</td><td>RECT</td><td>w > 0 AND h > 0</td><td class="err">"Rectangle dimensions must be positive"</td></tr>
+            <tr><td class="pill pill-re">SEM-08</td><td>RECT</td><td>x+w ≤ canvas_width AND y+h ≤ canvas_height</td><td class="err">"Rectangle extends outside canvas bounds"</td></tr>
+            <tr><td class="pill pill-re">SEM-09</td><td>LINE</td><td>0 ≤ x1,x2 &lt; width AND 0 ≤ y1,y2 &lt; height</td><td class="err">"LINE endpoint out of canvas bounds"</td></tr>
+            <tr><td class="pill pill-re">SEM-10</td><td>CIRCLE</td><td>radius > 0</td><td class="err">"Circle radius must be a positive integer"</td></tr>
+            <tr><td class="pill pill-re">SEM-11</td><td>CIRCLE</td><td>cx−r ≥ 0 AND cx+r &lt; width AND cy−r ≥ 0 AND cy+r &lt; height</td><td class="err">"Circle extends outside canvas bounds"</td></tr>
+            <tr><td class="pill pill-re">SEM-12</td><td>LOOP</td><td>count > 0</td><td class="err">"Loop count must be a positive integer (got {n})"</td></tr>
+            <tr><td class="pill pill-re">SEM-13</td><td>ROTATE</td><td>0 ≤ angle ≤ 360</td><td class="err">"ROTATE angle must be 0–360 (got {a})"</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>SemanticAnalyzer full structure</h3>
+      <pre><span class="kw">import</span> re
+
+<span class="kw">class</span> <span class="fn">SemanticAnalyzer</span>(NodeVisitor):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.sym_table   = SymbolTable()
+        self.canvas_w    = None   <span class="cm"># set on visit_CanvasNode</span>
+        self.canvas_h    = None
+        self.errors      = []     <span class="cm"># List[SemanticError] — collects ALL</span>
+        self.canvas_seen = False
+
+    <span class="kw">def</span> <span class="fn">err</span>(self, msg, line):
+        self.errors.append(SemanticError(msg, line))
+
+    <span class="kw">def</span> <span class="fn">analyze</span>(self, prog: ProgramNode) -> List[SemanticError]:
+        self.visit(prog)
+        <span class="kw">return</span> self.errors    <span class="cm"># [] means clean pass</span>
+
+    <span class="kw">def</span> <span class="fn">visit_ProgramNode</span>(self, node):
+        <span class="cm"># SEM-01: first statement must be CANVAS</span>
+        <span class="kw">if</span> node.statements <span class="kw">and</span> <span class="kw">not</span> isinstance(node.statements[<span class="num">0</span>], CanvasNode):
+            self.<span class="fn">err</span>(<span class="str">"CANVAS must be the first statement"</span>, node.statements[<span class="num">0</span>].line)
+        <span class="kw">for</span> s <span class="kw">in</span> node.statements: self.<span class="fn">visit</span>(s)
+
+    <span class="kw">def</span> <span class="fn">visit_CanvasNode</span>(self, node):
+        <span class="kw">if</span> self.canvas_seen: self.<span class="fn">err</span>(<span class="str">"Duplicate CANVAS"</span>, node.line)  <span class="cm"># SEM-02</span>
+        <span class="kw">if</span> node.width <= <span class="num">0</span> <span class="kw">or</span> node.height <= <span class="num">0</span>: self.<span class="fn">err</span>(<span class="str">"Canvas dims must be positive"</span>, node.line)  <span class="cm"># SEM-03</span>
+        self.canvas_w = node.width; self.canvas_h = node.height; self.canvas_seen = True
+
+    <span class="kw">def</span> <span class="fn">visit_PixelNode</span>(self, node):
+        <span class="kw">if not</span> self.canvas_seen: self.<span class="fn">err</span>(<span class="str">"No CANVAS declared"</span>, node.line); <span class="kw">return</span>
+        <span class="kw">if not</span> (<span class="num">0</span> <= node.x < self.canvas_w): self.<span class="fn">err</span>(<span class="str">f"x={node.x} out of bounds"</span>, node.line)  <span class="cm"># SEM-04</span>
+        <span class="kw">if not</span> (<span class="num">0</span> <= node.y < self.canvas_h): self.<span class="fn">err</span>(<span class="str">f"y={node.y} out of bounds"</span>, node.line)  <span class="cm"># SEM-05</span>
+        <span class="kw">if not</span> re.match(<span class="str">r'^#[0-9A-Fa-f]{6}$'</span>, node.color): self.<span class="fn">err</span>(<span class="str">f"Bad color"</span>, node.line)    <span class="cm"># SEM-06</span>
+
+    <span class="kw">def</span> <span class="fn">visit_LoopNode</span>(self, node):
+        <span class="kw">if</span> node.count <= <span class="num">0</span>: self.<span class="fn">err</span>(<span class="str">"Loop count must be > 0"</span>, node.line)    <span class="cm"># SEM-12</span>
+        self.sym_table.<span class="fn">enter_scope</span>()
+        <span class="kw">for</span> s <span class="kw">in</span> node.body: self.<span class="fn">visit</span>(s)
+        self.sym_table.<span class="fn">exit_scope</span>()
+
+    <span class="kw">def</span> <span class="fn">visit_RotateNode</span>(self, node):
+        <span class="kw">if not</span> (<span class="num">0</span> <= node.angle <= <span class="num">360</span>): self.<span class="fn">err</span>(<span class="str">f"Angle must be 0-360"</span>, node.line)  <span class="cm"># SEM-13</span></pre>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 13: ERRORS
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="errors">
+      <div class="section-header">
+        <span class="section-num">§ 13</span>
+        <span class="section-title">Error Handling — All Error Types</span>
+      </div>
+      <p class="section-desc">PixelLang defines 4 distinct error classes, one per compiler phase. All inherit from a base <span class="inline-code">PixelLangError</span>. Errors include line and column numbers for GUI highlighting.</p>
+
+      <pre><span class="kw">class</span> <span class="fn">PixelLangError</span>(Exception):
+    <span class="cm">"""Base for all PixelLang compiler errors."""</span>
+    <span class="kw">pass</span>
+
+<span class="kw">class</span> <span class="fn">LexError</span>(PixelLangError):
+    <span class="cm">"""Raised by the Lexer for invalid characters or malformed tokens."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, message: str, line: int, col: int):
+        super().__init__(<span class="str">f"[LexError] line {line}, col {col}: {message}"</span>)
+        self.line = line; self.col = col
+
+<span class="kw">class</span> <span class="fn">ParseError</span>(PixelLangError):
+    <span class="cm">"""Raised by the Parser for grammar rule violations."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, message: str, line: int, col: int):
+        super().__init__(<span class="str">f"[ParseError] line {line}, col {col}: {message}"</span>)
+        self.line = line; self.col = col
+
+<span class="kw">class</span> <span class="fn">SemanticError</span>(PixelLangError):
+    <span class="cm">"""Raised by SemanticAnalyzer for type/bounds/scope violations."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, message: str, line: int):
+        super().__init__(<span class="str">f"[SemanticError] line {line}: {message}"</span>)
+        self.line = line
+
+<span class="kw">class</span> <span class="fn">CodeGenError</span>(PixelLangError):
+    <span class="cm">"""Raised during code generation if drawing fails."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, message: str):
+        super().__init__(<span class="str">f"[CodeGenError]: {message}"</span>)</pre>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Error type</th><th>Phase</th><th>Has line?</th><th>Has col?</th><th>Example message</th></tr></thead>
+          <tbody>
+            <tr><td class="mono" style="color:#f07070">LexError</td><td>Lexer</td><td class="ok">Yes</td><td class="ok">Yes</td><td>[LexError] line 2, col 8: Unknown character '@'</td></tr>
+            <tr><td class="mono" style="color:#f07070">LexError</td><td>Lexer</td><td class="ok">Yes</td><td class="ok">Yes</td><td>[LexError] line 5, col 3: Invalid color '#ZZZZZZ' — expected hex digit</td></tr>
+            <tr><td class="mono" style="color:#f5a623">ParseError</td><td>Parser</td><td class="ok">Yes</td><td class="ok">Yes</td><td>[ParseError] line 3, col 12: Expected SEMICOLON, got 'PIXEL'</td></tr>
+            <tr><td class="mono" style="color:#f5a623">ParseError</td><td>Parser</td><td class="ok">Yes</td><td class="ok">Yes</td><td>[ParseError] line 7, col 1: Unexpected token 'myVar'</td></tr>
+            <tr><td class="mono" style="color:#64b5f6">SemanticError</td><td>Semantic</td><td class="ok">Yes</td><td class="err">No</td><td>[SemanticError] line 1: CANVAS must be the first statement</td></tr>
+            <tr><td class="mono" style="color:#64b5f6">SemanticError</td><td>Semantic</td><td class="ok">Yes</td><td class="err">No</td><td>[SemanticError] line 4: PIXEL x=25 out of bounds (canvas width=20)</td></tr>
+            <tr><td class="mono" style="color:#69d88a">CodeGenError</td><td>CodeGen</td><td class="err">No</td><td class="err">No</td><td>[CodeGenError]: Failed to save PNG — disk full</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 14: CODE GENERATION
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="codegen">
+      <div class="section-header">
+        <span class="section-num">§ 14</span>
+        <span class="section-title">Code Generation — Pillow Backend</span>
+      </div>
+      <p class="section-desc">The <strong>CodeGenerator</strong> is the final compiler phase. It walks the validated AST using the visitor pattern and calls Pillow (PIL) drawing API methods to produce a pixel-perfect PNG image. It maintains a <strong>transform stack</strong> to handle coordinate offsets across nested LOOP bodies.</p>
+
+      <pre><span class="kw">from</span> PIL <span class="kw">import</span> Image, ImageDraw
+
+<span class="kw">class</span> <span class="fn">CodeGenerator</span>(NodeVisitor):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.image    = None    <span class="cm"># PIL.Image.Image</span>
+        self.draw     = None    <span class="cm"># PIL.ImageDraw.ImageDraw</span>
+        self.tx       = <span class="num">0</span>      <span class="cm"># x translate accumulator</span>
+        self.ty       = <span class="num">0</span>      <span class="cm"># y translate accumulator</span>
+        self.angle    = <span class="num">0</span>      <span class="cm"># rotation accumulator (degrees)</span>
+        self.tx_stack = []     <span class="cm"># save/restore tx on LOOP enter/exit</span>
+        self.ty_stack = []     <span class="cm"># save/restore ty on LOOP enter/exit</span>
+
+    <span class="kw">def</span> <span class="fn">generate</span>(self, program: ProgramNode) -> Image.Image:
+        self.visit(program)
+        <span class="kw">return</span> self.image
+
+    <span class="cm"># ── CANVAS ──────────────────────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_CanvasNode</span>(self, n):
+        self.image = Image.new(<span class="str">"RGB"</span>, (n.width, n.height), <span class="str">"white"</span>)
+        self.draw  = ImageDraw.Draw(self.image)
+
+    <span class="cm"># ── PIXEL ───────────────────────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_PixelNode</span>(self, n):
+        self.draw.point((n.x + self.tx, n.y + self.ty), fill=n.color)
+
+    <span class="cm"># ── RECT ────────────────────────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_RectNode</span>(self, n):
+        x0, y0 = n.x + self.tx, n.y + self.ty
+        self.draw.rectangle([x0, y0, x0+n.w, y0+n.h], fill=n.color)
+
+    <span class="cm"># ── LINE ────────────────────────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_LineNode</span>(self, n):
+        self.draw.line([(n.x1+self.tx, n.y1+self.ty),
+                        (n.x2+self.tx, n.y2+self.ty)], fill=n.color, width=<span class="num">1</span>)
+
+    <span class="cm"># ── CIRCLE ──────────────────────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_CircleNode</span>(self, n):
+        cx, cy, r = n.cx+self.tx, n.cy+self.ty, n.radius
+        self.draw.ellipse([cx-r, cy-r, cx+r, cy+r], fill=n.color)
+
+    <span class="cm"># ── LOOP (key: save/restore transform) ──────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_LoopNode</span>(self, n):
+        self.tx_stack.append(self.tx)    <span class="cm"># save outer offset</span>
+        self.ty_stack.append(self.ty)
+        <span class="kw">for</span> _ <span class="kw">in</span> range(n.count):
+            <span class="kw">for</span> stmt <span class="kw">in</span> n.body:
+                self.visit(stmt)        <span class="cm"># tx/ty accumulate each iteration</span>
+        self.tx = self.tx_stack.pop()    <span class="cm"># restore outer offset</span>
+        self.ty = self.ty_stack.pop()
+
+    <span class="cm"># ── TRANSLATE ───────────────────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_TranslateNode</span>(self, n):
+        self.tx += n.dx                  <span class="cm"># accumulate — NOT reset!</span>
+        self.ty += n.dy
+
+    <span class="cm"># ── ROTATE ──────────────────────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">visit_RotateNode</span>(self, n):
+        self.angle = (self.angle + n.angle) % <span class="num">360</span></pre>
+
+      <div class="grid2">
+        <div class="note">
+          <strong>Why the transform stack?</strong><br>
+          In <code>LOOP 3 { PIXEL 0 0 #00F; TRANSLATE 1 1; }</code>, tx accumulates across iterations: 0→1→2→3. After the loop, tx must go back to 0 (or whatever it was before the loop). The stack saves the pre-loop value and restores it on exit — allowing nested loops to work correctly too.
+        </div>
+        <div class="warn-box">
+          <strong>TRANSLATE inside LOOP creates patterns</strong><br>
+          The TRANSLATE accumulates within each loop iteration. This is the core "pixel art pattern" feature. The 3 blue pixels land at (0,0), (1,1), (2,2) — a diagonal line created entirely by the loop + translate interaction.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SECTION 15: GUI
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="gui">
+      <div class="section-header">
+        <span class="section-num">§ 15</span>
+        <span class="section-title">GUI Specification — Tkinter</span>
+      </div>
+      <p class="section-desc">The GUI is built with Python's standard <span class="inline-code">tkinter</span> library. It provides a split-panel editor + live preview window. The user writes PixelLang code in the left editor, clicks "Compile & Run", and sees the generated pixel art on the right — with errors highlighted inline.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title"><span style="background:#b0a6ff"></span>Left panel — code editor</div>
+          <ul style="font-size:13px;color:var(--text2);padding-left:1.25rem;line-height:2">
+            <li>Monospace font (Courier 12)</li>
+            <li>Line number gutter (auto-updating)</li>
+            <li>Syntax highlighting:
+              <ul style="padding-left:1rem">
+                <li><span class="pill pill-pu">Keywords</span> → blue #4fc3f7</li>
+                <li><span class="pill pill-te">Colors</span> → orange #ff9800</li>
+                <li><span class="pill pill-am">Numbers</span> → green #66bb6a</li>
+                <li><span class="pill pill-gy">Comments</span> → gray #78909c</li>
+              </ul>
+            </li>
+            <li>Error lines highlighted in red background</li>
+            <li>Ctrl+Return keyboard shortcut to compile</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title"><span style="background:#5ddbbc"></span>Right panel — image preview</div>
+          <ul style="font-size:13px;color:var(--text2);padding-left:1.25rem;line-height:2">
+            <li>Canvas widget showing generated PIL image</li>
+            <li>Scales image to fit panel (preserving aspect ratio)</li>
+            <li>Zoom In / Zoom Out buttons</li>
+            <li>"No output yet" placeholder on first load</li>
+            <li>Image refreshes on every successful compile</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span style="background:#f5a623"></span>Bottom status bar</div>
+        <div class="tbl-wrap" style="margin-top:6px">
+          <table>
+            <thead><tr><th>Element</th><th>Content</th><th>State</th></tr></thead>
+            <tbody>
+              <tr><td>Status label (success)</td><td class="mono" style="color:#69d88a">OK — 42 tokens | 7 AST nodes | 0 errors</td><td class="ok">Green text</td></tr>
+              <tr><td>Status label (error)</td><td class="mono" style="color:#f07070">[SemanticError] line 3: x=25 out of bounds</td><td class="err">Red text</td></tr>
+              <tr><td>Compile & Run button</td><td>Runs full pipeline: Lexer→Parser→Semantic→CodeGen</td><td>Always visible</td></tr>
+              <tr><td>Save PNG button</td><td>Opens file dialog, saves current image</td><td>Enabled after compile</td></tr>
+              <tr><td>Load File button</td><td>Opens .px file into editor</td><td>Always visible</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span style="background:#f07cae"></span>Error panel (below editor)</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:8px">A scrollable Listbox shows all collected errors. Clicking an error jumps the editor cursor to the offending line and highlights it in red.</p>
+        <pre style="margin:0"><span class="cm"># Error panel entries look like:</span>
+[<span class="var">LexError</span>]     line 2, col 8  → Unknown character '@'
+[<span class="var">ParseError</span>]   line 5, col 1  → Expected SEMICOLON, got 'PIXEL'
+[<span class="var">SemanticError</span>] line 7       → PIXEL x=99 out of bounds (width=20)
+<span class="cm"># Click any entry → editor scrolls to that line, highlights it</span></pre>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span style="background:#64b5f6"></span>App class structure</div>
+        <pre style="margin:0"><span class="kw">class</span> <span class="fn">PixelLangApp</span>(tk.Tk):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.<span class="fn">setup_layout</span>()     <span class="cm"># PanedWindow: editor | canvas</span>
+        self.<span class="fn">setup_editor</span>()     <span class="cm"># Text + line numbers + highlighting</span>
+        self.<span class="fn">setup_preview</span>()    <span class="cm"># Canvas widget for PIL image</span>
+        self.<span class="fn">setup_toolbar</span>()    <span class="cm"># Compile, Save, Load buttons</span>
+        self.<span class="fn">setup_error_panel</span>() <span class="cm"># Scrollable error listbox</span>
+        self.<span class="fn">setup_menu</span>()       <span class="cm"># File / View / Help menus</span>
+        self.<span class="fn">bind_shortcuts</span>()   <span class="cm"># Ctrl+Return = compile</span>
+
+    <span class="kw">def</span> <span class="fn">compile_and_run</span>(self):
+        source = self.editor.get(<span class="str">"1.0"</span>, tk.END)
+        img, errors = <span class="fn">compile_source</span>(source)  <span class="cm"># from main.py</span>
+        <span class="kw">if</span> errors:
+            self.<span class="fn">show_errors</span>(errors)
+        <span class="kw">else</span>:
+            self.<span class="fn">show_image</span>(img)
+            self.status.config(text=<span class="str">f"OK — compiled successfully"</span>)</pre>
+      </div>
+
+      <div class="note">The GUI calls <span class="inline-code">compile_source(source: str) → (PIL.Image | None, List[str])</span> from <span class="inline-code">main.py</span>. This function runs the full pipeline (Lexer → Parser → Semantic → CodeGen) and returns either the generated image or a list of error strings. The GUI never directly calls any compiler class — it goes through this single entry point.</div>
+
+      <h3>Complete sample PixelLang program</h3>
+      <pre><span class="cm">// PixelLang sample — tests all 8 keywords</span>
+<span class="kw">CANVAS</span> <span class="num">32</span> <span class="num">32</span>;
+
+<span class="cm">// Solid background via large rect</span>
+<span class="kw">RECT</span> <span class="num">0</span> <span class="num">0</span> <span class="num">32</span> <span class="num">32</span> <span class="str">#222222</span>;
+
+<span class="cm">// Draw a blue cross</span>
+<span class="kw">LINE</span> <span class="num">16</span> <span class="num">0</span>  <span class="num">16</span> <span class="num">31</span> <span class="str">#4FC3F7</span>;
+<span class="kw">LINE</span> <span class="num">0</span>  <span class="num">16</span> <span class="num">31</span> <span class="num">16</span> <span class="str">#4FC3F7</span>;
+
+<span class="cm">// Draw a red circle in center</span>
+<span class="kw">CIRCLE</span> <span class="num">16</span> <span class="num">16</span> <span class="num">5</span> <span class="str">#F44336</span>;
+
+<span class="cm">// Diagonal yellow dots using loop + translate</span>
+<span class="kw">LOOP</span> <span class="num">8</span> {
+    <span class="kw">PIXEL</span> <span class="num">0</span> <span class="num">0</span> <span class="str">#FFEB3B</span>;
+    <span class="kw">TRANSLATE</span> <span class="num">4</span> <span class="num">4</span>;
+}
+
+<span class="cm">// Rotated context (visual effect)</span>
+<span class="kw">ROTATE</span> <span class="num">45</span>;</pre>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--border);padding:1.5rem 0;margin-top:2rem;text-align:center">
+      <p style="font-family:var(--mono);font-size:12px;color:var(--text2)">PixelLang Language Specification v1.0 &nbsp;·&nbsp; CS4031 Compiler Construction &nbsp;·&nbsp; Spring 2026</p>
+      <p style="font-size:12px;color:var(--border2);margin-top:4px">Kinza · 23K-0842 &nbsp;·&nbsp; Final submission: 10 May 2026</p>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+  function setActive(el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    if (window.innerWidth <= 768) closeSidebar();
+  }
+
+  // Highlight active nav on scroll
+  const sections = document.querySelectorAll('.section');
+  const navItems = document.querySelectorAll('.nav-item');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) cur = s.id;
+    });
+    navItems.forEach(n => {
+      n.classList.toggle('active', n.getAttribute('href') === '#' + cur);
+    });
+  });
+</script>
+</body>
+</html>

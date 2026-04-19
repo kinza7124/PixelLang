@@ -1,0 +1,32 @@
+// Checkerboard Pattern
+// Uses loops and translate to create a pattern (no negative numbers)
+
+CANVAS 32 32;
+
+// White background
+RECT 0 0 32 32 #FFFFFF;
+
+// Draw black squares manually in checkerboard pattern
+// Row 0
+RECT 0 0 4 4 #000000;
+RECT 8 0 4 4 #000000;
+RECT 16 0 4 4 #000000;
+RECT 24 0 4 4 #000000;
+
+// Row 2
+RECT 4 8 4 4 #000000;
+RECT 12 8 4 4 #000000;
+RECT 20 8 4 4 #000000;
+RECT 28 8 4 4 #000000;
+
+// Row 4
+RECT 0 16 4 4 #000000;
+RECT 8 16 4 4 #000000;
+RECT 16 16 4 4 #000000;
+RECT 24 16 4 4 #000000;
+
+// Row 6
+RECT 4 24 4 4 #000000;
+RECT 12 24 4 4 #000000;
+RECT 20 24 4 4 #000000;
+RECT 28 24 4 4 #000000;
