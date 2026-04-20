@@ -61,6 +61,351 @@ class LineNumberCanvas(tk.Canvas):
             i = self.text_widget.index(f'{i}+1line')
 
 
+class HelpWindow(tk.Toplevel):
+    """Professional help window with tabs for different reference categories."""
+    
+    def __init__(self, parent, colors):
+        super().__init__(parent)
+        self.title('PixelLang Reference')
+        self.geometry('700x600')
+        self.configure(bg=colors['background'])
+        self.colors = colors
+        
+        # Make window modal
+        self.transient(parent)
+        self.grab_set()
+        
+        self.setup_ui()
+        self.center_window()
+        
+        # Focus and bind escape to close
+        self.focus_set()
+        self.bind('<Escape>', lambda e: self.destroy())
+    
+    def setup_ui(self):
+        """Create the help window UI with tabs."""
+        c = self.colors
+        
+        # Header
+        header = tk.Frame(self, bg=c['background'], height=50)
+        header.pack(fill=tk.X, padx=10, pady=(10, 0))
+        header.pack_propagate(False)
+        
+        tk.Label(
+            header,
+            text='PixelLang Reference v2.0',
+            bg=c['background'],
+            fg=c['highlight'],
+            font=('Segoe UI', 16, 'bold')
+        ).pack(side=tk.LEFT, pady=10)
+        
+        # Close button
+        tk.Button(
+            header,
+            text='X',
+            command=self.destroy,
+            bg=c['button_bg'],
+            fg=c['foreground'],
+            font=('Segoe UI', 10, 'bold'),
+            width=3,
+            relief=tk.FLAT,
+            cursor='hand2'
+        ).pack(side=tk.RIGHT, pady=10)
+        
+        # Notebook (tabs)
+        style = ttk.Style()
+        style.configure('Help.TNotebook', background=c['background'])
+        style.configure('Help.TNotebook.Tab', padding=[10, 5], font=('Segoe UI', 10))
+        
+        notebook = ttk.Notebook(self, style='Help.TNotebook')
+        notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Create tabs
+        self.create_commands_tab(notebook)
+        self.create_examples_tab(notebook)
+        self.create_shortcuts_tab(notebook)
+        self.create_ide_tab(notebook)
+    
+    def create_commands_tab(self, notebook):
+        """Create the commands reference tab."""
+        c = self.colors
+        
+        frame = tk.Frame(notebook, bg=c['background'])
+        notebook.add(frame, text='Commands')
+        
+        # Scrollable text
+        text = tk.Text(
+            frame,
+            wrap=tk.WORD,
+            bg=c['background'],
+            fg=c['foreground'],
+            font=('Consolas', 11),
+            padx=15,
+            pady=15,
+            borderwidth=0,
+            highlightthickness=0
+        )
+        scrollbar = ttk.Scrollbar(frame, command=text.yview)
+        text.config(yscrollcommand=scrollbar.set)
+        
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Content
+        content = """CORE COMMANDS (18)
+==================
+
+CANVAS width height;                  - Set canvas size (must be first)
+PIXEL x y #COLOR;                     - Draw pixel at (x,y)
+RECT x y w h #COLOR;                  - Draw filled rectangle
+LINE x1 y1 x2 y2 #COLOR;              - Draw line
+CIRCLE cx cy r #COLOR;                - Draw filled circle
+FILL x y #COLOR;                      - Flood fill from position
+ELLIPSE cx cy rx ry #COLOR;           - Draw filled ellipse
+CLEAR #COLOR;                         - Fill entire canvas
+BORDER x y w h t #COLOR;              - Draw hollow rectangle (t=thickness)
+TRIANGLE x1 y1 x2 y2 x3 y3 #COLOR;   - Draw filled triangle
+ARC cx cy r start end #COLOR;         - Draw circular arc (0-360 degrees)
+POLYGON x1 y1 x2 y2 x3 y3 x4 y4 #C;  - Draw 4-point polygon
+TEXT x y "STRING" #COLOR;             - Draw text (quoted strings with spaces)
+MIRROR axis;                          - Flip: 0=horizontal, 1=vertical
+SCALE factor;                         - Scale drawing (1-10)
+LOOP n { ... }                        - Repeat block n times
+TRANSLATE dx dy;                      - Shift drawing origin
+ROTATE angle;                         - Rotate context (0-360)
+
+ADVANCED COMMANDS v2.0 (12)
+===========================
+
+BEZIER x1 y1 cx1 cy1 cx2 cy2 x2 y2 #COLOR;  - Cubic bezier curve
+STAR cx cy outer_r inner_r points #COLOR;    - Star with n points
+ROUNDRECT x y w h radius #COLOR;             - Rounded rectangle
+HEART cx cy size #COLOR;                    - Heart shape
+ARROW x1 y1 x2 y2 head_size #COLOR;         - Arrow with arrowhead
+PALETTE idx #COLOR;                          - Define palette color (0-15)
+SETPALETTE idx;                             - Set active palette
+SPRITE x y pattern #COLOR;                   - Draw binary sprite pattern
+RANDOM min max;                             - Generate random number
+VAR name value;                             - Define variable
+SET name value;                             - Set variable value
+
+COLOR FORMAT
+============
+Colors use hex format: #RRGGBB
+
+Examples:
+  #FF0000  - Red
+  #00FF00  - Green
+  #0000FF  - Blue
+  #FFFFFF  - White
+  #000000  - Black
+  #1A1A2E  - Dark blue-gray
+"""
+        text.insert('1.0', content)
+        text.config(state=tk.DISABLED)
+    
+    def create_examples_tab(self, notebook):
+        """Create the examples tab."""
+        c = self.colors
+        
+        frame = tk.Frame(notebook, bg=c['background'])
+        notebook.add(frame, text='Examples')
+        
+        text = tk.Text(
+            frame,
+            wrap=tk.WORD,
+            bg=c['background'],
+            fg=c['foreground'],
+            font=('Consolas', 10),
+            padx=15,
+            pady=15,
+            borderwidth=0,
+            highlightthickness=0
+        )
+        scrollbar = ttk.Scrollbar(frame, command=text.yview)
+        text.config(yscrollcommand=scrollbar.set)
+        
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        content = """SIMPLE SHAPES
+=============
+CANVAS 100 100;
+CLEAR #1A1A2E;
+CIRCLE 50 50 30 #E94560;
+TEXT 35 80 "HELLO" #FFFFFF;
+
+LOOP PATTERN
+============
+CANVAS 64 64;
+CLEAR #1A1A2E;
+LOOP 8 {
+    PIXEL 32 32 #4ECDC4;
+    TRANSLATE 5 0;
+    ROTATE 45;
+}
+
+ADVANCED SHAPES
+===============
+CANVAS 120 120;
+CLEAR #1A1A2E;
+STAR 60 60 40 20 5 #FFE66D;
+HEART 30 90 15 #FF6B6B;
+ARROW 80 80 100 100 8 #4ECDC4;
+BEZIER 20 60 40 20 80 100 100 60 #9B59B6;
+
+TEXT WITH SPACES
+================
+CANVAS 120 80;
+CLEAR #1A1A2E;
+TEXT 10 30 "KINZA SHERYAN" #FF6B6B;
+TEXT 10 50 "PIXEL LANG V2" #4ECDC4;
+"""
+        text.insert('1.0', content)
+        text.config(state=tk.DISABLED)
+    
+    def create_shortcuts_tab(self, notebook):
+        """Create the keyboard shortcuts tab."""
+        c = self.colors
+        
+        frame = tk.Frame(notebook, bg=c['background'])
+        notebook.add(frame, text='Shortcuts')
+        
+        text = tk.Text(
+            frame,
+            wrap=tk.WORD,
+            bg=c['background'],
+            fg=c['foreground'],
+            font=('Consolas', 11),
+            padx=15,
+            pady=15,
+            borderwidth=0,
+            highlightthickness=0
+        )
+        scrollbar = ttk.Scrollbar(frame, command=text.yview)
+        text.config(yscrollcommand=scrollbar.set)
+        
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        content = """FILE OPERATIONS
+===============
+Ctrl+N      - New file
+Ctrl+O      - Open file
+Ctrl+S      - Save file
+
+EDITING
+=======
+Ctrl+Z      - Undo
+Ctrl+Y      - Redo
+Ctrl+X      - Cut
+Ctrl+C      - Copy
+Ctrl+V      - Paste
+Ctrl+A      - Select all
+
+COMPILATION
+===========
+Ctrl+Return - Compile & Run
+Ctrl+R      - Compile & Run (alternate)
+
+VIEW
+====
+Ctrl++      - Zoom in (preview)
+Ctrl+-      - Zoom out (preview)
+Ctrl+Plus   - Increase font size
+Ctrl+Minus  - Decrease font size
+
+IDE FEATURES
+============
+View > Theme       - Switch color themes (6 themes)
+View > Word Wrap   - Toggle line wrapping
+Edit > Font Size   - Adjust editor font size
+F1                 - Show this help window
+"""
+        text.insert('1.0', content)
+        text.config(state=tk.DISABLED)
+    
+    def create_ide_tab(self, notebook):
+        """Create the IDE features tab."""
+        c = self.colors
+        
+        frame = tk.Frame(notebook, bg=c['background'])
+        notebook.add(frame, text='IDE Features')
+        
+        text = tk.Text(
+            frame,
+            wrap=tk.WORD,
+            bg=c['background'],
+            fg=c['foreground'],
+            font=('Consolas', 11),
+            padx=15,
+            pady=15,
+            borderwidth=0,
+            highlightthickness=0
+        )
+        scrollbar = ttk.Scrollbar(frame, command=text.yview)
+        text.config(yscrollcommand=scrollbar.set)
+        
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        content = """PIXELLANG IDE v2.0
+==================
+
+A modern IDE for the PixelLang graphics language.
+
+FEATURES
+========
+\u2022 Syntax highlighting for all 30+ keywords
+\u2022 Line numbers gutter
+\u2022 Error panel with clickable navigation
+\u2022 Live image preview with zoom controls
+\u2022 6 color themes (Dark, Light, High Contrast, Monokai, Dracula, Solarized)
+\u2022 Font size adjustment
+\u2022 Word wrap toggle
+\u2022 Undo/Redo support
+\u2022 Grid overlay on preview
+\u2022 Console output panel
+
+EDITOR
+======
+The code editor features:
+- Automatic syntax highlighting
+- Real-time line number updates
+- Error highlighting on problematic lines
+- Support for both single and double quotes
+
+PREVIEW PANEL
+=============
+- Scalable image preview
+- Grid overlay option
+- Click to zoom functionality
+- Auto-centering of generated images
+
+COMPILER
+========
+The built-in compiler performs:
+1. Lexical analysis (tokenization)
+2. Parsing (AST generation)
+3. Semantic analysis (error checking)
+4. Code generation (image output)
+
+All compilation errors are collected and displayed
+in the error panel with line numbers for easy navigation.
+"""
+        text.insert('1.0', content)
+        text.config(state=tk.DISABLED)
+    
+    def center_window(self):
+        """Center the window on screen."""
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
+
+
 class PixelLangApp(tk.Tk):
     """Main application window for PixelLang IDE."""
     
@@ -242,6 +587,7 @@ class PixelLangApp(tk.Tk):
         self.setup_preview()
         self.setup_toolbar()
         self.setup_error_panel()
+        self.setup_console_panel()
         self.setup_menu()
         self.bind_shortcuts()
         
@@ -290,21 +636,41 @@ class PixelLangApp(tk.Tk):
         self.preview_frame = ttk.Frame(self.h_paned)
         self.h_paned.add(self.preview_frame, weight=1)
         
+        # Bottom console panel (output/terminal)
+        self.console_frame = ttk.LabelFrame(self.main_frame, text='Console Output', padding=5)
+        self.console_frame.pack(fill=tk.X, pady=(5, 0))
+        self.console_frame.pack_forget()  # Hidden by default
+        
         # Bottom error panel
         self.error_frame = ttk.LabelFrame(self.main_frame, text='Errors', padding=5)
         self.error_frame.pack(fill=tk.X, pady=(5, 0))
         self.error_frame.pack_forget()  # Hidden by default
         
-        # Status bar
+        # Status bar with more information
+        self.status_frame = tk.Frame(self.main_frame, bg=self.COLORS['status_bg'])
+        self.status_frame.pack(fill=tk.X, pady=(5, 0))
+        
         self.status_bar = tk.Label(
-            self.main_frame, 
+            self.status_frame, 
             text='Ready', 
             anchor=tk.W,
             bg=self.COLORS['status_bg'],
             fg=self.COLORS['foreground'],
             font=('Segoe UI', 10)
         )
-        self.status_bar.pack(fill=tk.X, pady=(5, 0))
+        self.status_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Line/column indicator
+        self.position_label = tk.Label(
+            self.status_frame,
+            text='Ln 1, Col 1',
+            anchor=tk.E,
+            bg=self.COLORS['status_bg'],
+            fg=self.COLORS['foreground'],
+            font=('Segoe UI', 10),
+            width=15
+        )
+        self.position_label.pack(side=tk.RIGHT, padx=(0, 10))
     
     def setup_toolbar(self):
         """Create toolbar with action buttons."""
@@ -411,11 +777,12 @@ class PixelLangApp(tk.Tk):
         h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
         self.editor.config(xscrollcommand=h_scrollbar.set)
         
-        # Bind events for line number updates and syntax highlighting
+        # Bind events for line number updates, syntax highlighting, and position tracking
         self.editor.bind('<KeyRelease>', self.on_editor_change)
         self.editor.bind('<ButtonRelease>', self.on_editor_change)
         self.editor.bind('<MouseWheel>', self.on_editor_change)
         self.editor.bind('<Configure>', self.on_editor_change)
+        self.editor.bind('<Motion>', self.update_position)
         
         # Bind font shortcuts
         self.bind('<Control-plus>', self.increase_font)
@@ -463,6 +830,86 @@ class PixelLangApp(tk.Tk):
         # Click to jump to error
         self.error_listbox.bind('<Double-Button-1>', self.on_error_click)
     
+    def setup_console_panel(self):
+        """Create console output panel for compilation logs."""
+        c = self.COLORS
+        
+        # Console text widget with monospace font
+        self.console_text = tk.Text(
+            self.console_frame,
+            height=6,
+            wrap=tk.WORD,
+            font=(self.FONT_FAMILY, self.FONT_SIZE - 2),
+            bg=c['background'],
+            fg=c['foreground'],
+            selectbackground=c['select_bg'],
+            padx=5,
+            pady=5,
+            borderwidth=0,
+            highlightthickness=0,
+            state=tk.DISABLED
+        )
+        self.console_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Console scrollbar
+        console_scrollbar = ttk.Scrollbar(self.console_frame, command=self.console_text.yview)
+        console_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.console_text.config(yscrollcommand=console_scrollbar.set)
+        
+        # Configure console tags for different message types
+        self.console_text.tag_config('success', foreground='#00FF00')
+        self.console_text.tag_config('error', foreground='#FF4444')
+        self.console_text.tag_config('warning', foreground='#FFA500')
+        self.console_text.tag_config('info', foreground=c['foreground'])
+        self.console_text.tag_config('timestamp', foreground=c['comment'], font=(self.FONT_FAMILY, self.FONT_SIZE - 3))
+    
+    def log_console(self, message, msg_type='info'):
+        """Log a message to the console panel."""
+        import datetime
+        timestamp = datetime.datetime.now().strftime('%H:%M:%S')
+        
+        self.console_text.config(state=tk.NORMAL)
+        
+        # Insert timestamp
+        self.console_text.insert(tk.END, f'[{timestamp}] ', 'timestamp')
+        
+        # Insert message with tag
+        self.console_text.insert(tk.END, f'{message}\n', msg_type)
+        
+        self.console_text.see(tk.END)  # Scroll to bottom
+        self.console_text.config(state=tk.DISABLED)
+    
+    def clear_console(self):
+        """Clear the console panel."""
+        self.console_text.config(state=tk.NORMAL)
+        self.console_text.delete('1.0', tk.END)
+        self.console_text.config(state=tk.DISABLED)
+    
+    def show_console(self):
+        """Show the console panel."""
+        # Pack before error_frame if it's visible, otherwise before status_frame
+        if self.error_frame.winfo_viewable():
+            self.console_frame.pack(fill=tk.X, pady=(5, 0), before=self.error_frame)
+        else:
+            self.console_frame.pack(fill=tk.X, pady=(5, 0), before=self.status_frame)
+    
+    def hide_console(self):
+        """Hide the console panel."""
+        self.console_frame.pack_forget()
+    
+    def toggle_console(self):
+        """Toggle console panel visibility."""
+        if self.console_frame.winfo_viewable():
+            self.hide_console()
+        else:
+            self.show_console()
+    
+    def update_position(self, event=None):
+        """Update the line/column indicator in status bar."""
+        index = self.editor.index(tk.INSERT)
+        line, col = index.split('.')
+        self.position_label.config(text=f'Ln {line}, Col {col}')
+    
     def setup_menu(self):
         """Create menu bar."""
         menubar = tk.Menu(self, bg=self.COLORS['menu_bg'], fg=self.COLORS['foreground'])
@@ -505,6 +952,7 @@ class PixelLangApp(tk.Tk):
         view_menu.add_separator()
         view_menu.add_checkbutton(label='Line Numbers', variable=tk.BooleanVar(value=True))
         view_menu.add_checkbutton(label='Word Wrap', command=self.toggle_wrap)
+        view_menu.add_checkbutton(label='Console', command=self.toggle_console)
         
         # Run menu
         run_menu = tk.Menu(menubar, tearoff=0, bg=self.COLORS['menu_bg'], fg=self.COLORS['foreground'])
@@ -514,7 +962,7 @@ class PixelLangApp(tk.Tk):
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0, bg=self.COLORS['menu_bg'], fg=self.COLORS['foreground'])
         menubar.add_cascade(label='Help', menu=help_menu)
-        help_menu.add_command(label='PixelLang Reference', command=self.show_help)
+        help_menu.add_command(label='PixelLang Reference', command=self.show_help, accelerator='F1')
     
     def bind_shortcuts(self):
         """Bind keyboard shortcuts."""
@@ -525,11 +973,13 @@ class PixelLangApp(tk.Tk):
         self.bind('<Control-s>', lambda e: self.save_file())
         self.bind('<Control-z>', self.undo)
         self.bind('<Control-y>', self.redo)
+        self.bind('<F1>', lambda e: self.show_help())
     
     def on_editor_change(self, event=None):
         """Handle editor changes - update line numbers and highlight."""
         self.line_numbers.redraw()
         self.highlight_syntax()
+        self.update_position()
     
     def highlight_syntax(self):
         """Apply syntax highlighting to editor content."""
@@ -621,22 +1071,31 @@ class PixelLangApp(tk.Tk):
         self.error_lines.append(line_num)
     
     def compile_and_run(self):
-        """Compile the source and display result."""
+        """Compile the source and display result with console logging."""
         source = self.editor.get('1.0', tk.END)
         
-        # Clear previous error highlights
+        # Clear previous error highlights and console
         self.clear_error_highlights()
+        self.clear_console()
+        self.show_console()
+        
+        # Log compilation start
+        self.log_console('Starting compilation...', 'info')
         
         # Compile
+        import time
+        start_time = time.time()
         image, errors = compile_source(source)
+        elapsed = (time.time() - start_time) * 1000
         
         if errors:
             # Show errors
-            self.error_frame.pack(fill=tk.X, pady=(5, 0))
+            self.error_frame.pack(fill=tk.X, pady=(5, 0), before=self.status_frame)
             self.error_listbox.delete(0, tk.END)
             
             for error in errors:
                 self.error_listbox.insert(tk.END, error)
+                self.log_console(f'Error: {error}', 'error')
                 # Try to extract line number and highlight
                 import re
                 match = re.search(r'line (\d+)', error)
@@ -647,6 +1106,7 @@ class PixelLangApp(tk.Tk):
             # Update status
             self.status_bar.config(text=f'Compilation failed - {len(errors)} error(s)', foreground='#ff6b6b')
             self.save_btn.config(state=tk.DISABLED)
+            self.log_console(f'Compilation failed in {elapsed:.1f}ms', 'error')
         else:
             # Hide error panel
             self.error_frame.pack_forget()
@@ -658,6 +1118,11 @@ class PixelLangApp(tk.Tk):
             # Update status
             self.status_bar.config(text='Compilation successful!', foreground='#4ec9b0')
             self.save_btn.config(state=tk.NORMAL)
+            
+            # Log success
+            img_size = image.size if image else (0, 0)
+            self.log_console(f'Compilation successful in {elapsed:.1f}ms', 'success')
+            self.log_console(f'Output image: {img_size[0]}x{img_size[1]} pixels', 'info')
     
     def display_image(self):
         """Display the current image in the preview canvas."""
@@ -868,67 +1333,8 @@ class PixelLangApp(tk.Tk):
             )
     
     def show_help(self):
-        """Show help dialog with PixelLang reference."""
-        help_text = """PixelLang Reference v2.0
-========================
-
-Core Keywords (18):
-  CANVAS W H;                - Set canvas size (must be first)
-  PIXEL x y #COLOR;          - Draw pixel at (x,y)
-  RECT x y w h #C;           - Draw rectangle
-  LINE x1 y1 x2 y2 #C;       - Draw line
-  CIRCLE cx cy r #C;         - Draw circle
-  FILL x y #C;               - Flood fill from (x,y)
-  ELLIPSE cx cy rx ry #C;    - Draw ellipse
-  CLEAR #COLOR;              - Fill entire canvas
-  BORDER x y w h t #C;       - Draw hollow rectangle border
-  TRIANGLE x1 y1 x2 y2 x3 y3 #C; - Draw filled triangle
-  ARC cx cy r start end #C;  - Draw circular arc
-  POLYGON x1 y1 x2 y2 x3 y3 x4 y4 #C; - Draw 4-point polygon
-  TEXT x y text #C;          - Draw text (uppercase, e.g., HI)
-  MIRROR axis;               - Flip: 0=horizontal, 1=vertical
-  SCALE factor;              - Scale drawing (1-10)
-  LOOP n { ... }             - Repeat body n times
-  TRANSLATE dx dy;          - Shift origin
-  ROTATE angle;              - Rotate context (0-360)
-
-v2.0 Advanced Keywords (12):
-  BEZIER x1 y1 cx1 cy1 cx2 cy2 x2 y2 #C; - Cubic bezier curve
-  STAR cx cy outer_r inner_r points #C; - Star shape
-  ROUNDRECT x y w h radius #C;           - Rounded rectangle
-  HEART cx cy size #C;                   - Heart shape
-  ARROW x1 y1 x2 y2 head_size #C;      - Arrow with arrowhead
-  PALETTE idx #COLOR;                    - Define palette color (0-15)
-  SETPALETTE idx;                        - Set active palette
-  SPRITE x y pattern #C;                - Draw sprite (binary pattern)
-  RANDOM min max;                        - Generate random number
-  VAR name value;                        - Define variable
-  SET name value;                        - Set variable value
-
-Color format: #RRGGBB (e.g., #FF0000 for red)
-
-Example:
-  CANVAS 100 100;
-  CLEAR #1A1A2E;
-  ARC 50 50 30 0 180 #FF0000;
-  TEXT 40 80 HI #FFFFFF;
-
-Keyboard Shortcuts:
-  Ctrl+Return - Compile & Run
-  Ctrl+N - New file
-  Ctrl+O - Open file
-  Ctrl+S - Save file
-  Ctrl+Z - Undo
-  Ctrl+Y - Redo
-  Ctrl++ / Ctrl+-  - Zoom in/out
-  Ctrl+Plus / Ctrl+Minus - Font size
-
-IDE Features:
-  View > Theme - Switch color themes (6 themes available)
-  View > Word Wrap - Toggle line wrapping
-  Edit > Font Size - Adjust editor font size
-"""
-        messagebox.showinfo('PixelLang Reference', help_text)
+        """Show professional help window with tabs."""
+        HelpWindow(self, self.COLORS)
     
     def insert_sample_code(self):
         """Insert sample code into editor."""
