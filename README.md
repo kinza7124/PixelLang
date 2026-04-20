@@ -83,7 +83,8 @@ BORDER x y w h t #COLOR;               // Draw hollow rectangle border (t=thickn
 TRIANGLE x1 y1 x2 y2 x3 y3 #C;        // Draw filled triangle
 ARC cx cy r start end #COLOR;         // Draw circular arc (angles 0-360)
 POLYGON x1 y1 x2 y2 x3 y3 x4 y4 #C;  // Draw 4-point polygon
-TEXT x y string #COLOR;                // Draw text (uppercase, use IDENT)
+TEXT x y "STRING" #COLOR;                // Draw text (quoted strings with spaces supported)
+TEXT x y IDENT #COLOR;                   // Single word (legacy style)
 MIRROR axis;                          // Flip: 0=horizontal, 1=vertical
 SCALE factor;                         // Scale drawing (1-10)
 TRANSLATE dx dy;                      // Shift drawing origin
