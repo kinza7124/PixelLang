@@ -52,6 +52,7 @@ class TokenType(Enum):
     # Literals
     NUMBER = auto()
     COLOR = auto()
+    STRING = auto()  # Quoted string literal
     
     # Identifiers
     IDENT = auto()

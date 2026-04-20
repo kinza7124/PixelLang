@@ -76,6 +76,21 @@ class Parser:
         tok = self.expect(TokenType.COLOR)
         return tok.value
     
+    def expect_string_or_ident(self) -> str:
+        """Expect and return a STRING or IDENT token value (for text content)."""
+        tok = self.current()
+        if tok.type == TokenType.STRING:
+            self.advance()
+            return tok.value
+        elif tok.type == TokenType.IDENT:
+            self.advance()
+            return tok.value
+        else:
+            raise ParseError(
+                f"Expected STRING or IDENT for text, got '{tok.value}' ({tok.type.name})",
+                tok.line, tok.col
+            )
+    
     def parse(self) -> ProgramNode:
         """
         Parse the token stream into an AST.
@@ -327,16 +342,16 @@ class Parser:
     
     def parse_text(self) -> TextNode:
         """
-        <text_stmt> ::= TEXT NUMBER NUMBER IDENT COLOR SEMICOLON
-        Draws text string at position. Text is an identifier (use UPPERCASE).
+        <text_stmt> ::= TEXT NUMBER NUMBER (STRING | IDENT) COLOR SEMICOLON
+        Draws text string at position. Text can be a quoted string or identifier.
+        Examples: TEXT 35 88 "HELLO WORLD" #FFFFFF; or TEXT 35 88 HI #FFFFFF;
         """
         tok = self.advance()  # consume TEXT
         line = tok.line
         x = self.expect_number()
         y = self.expect_number()
-        # Text is parsed as an identifier
-        text_tok = self.expect(TokenType.IDENT)
-        text = text_tok.value
+        # Text can be a quoted string or identifier
+        text = self.expect_string_or_ident()
         color = self.expect_color()
         self.expect(TokenType.SEMICOLON)
         return TextNode(x, y, text, color, line)

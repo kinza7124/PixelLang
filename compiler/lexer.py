@@ -172,23 +172,45 @@ class Lexer:
         start_line = self.line
         start_col = self.col
         
-        color = ''
+        color = self.advance()  # consume #
         
-        # Consume #
-        if self.peek() == '#':
-            color += self.advance()
-        
-        # Read exactly 6 hex digits
-        hex_digits = 0
-        while hex_digits < 6:
+        # Must have exactly 6 hex digits
+        for _ in range(6):
             char = self.peek()
             if char in '0123456789ABCDEFabcdef':
                 color += self.advance()
-                hex_digits += 1
             else:
-                self.error(f"Invalid color '{color}' - expected 6 hex digits after #, got '{char}'")
+                self.error(f"Invalid color format: expected 6 hex digits after #, got '{char}'")
+                # Try to recover by skipping to whitespace
+                while self.peek() not in ' \t\n' and self.peek() != '\0':
+                    self.advance()
+                return Token(TokenType.COLOR, color, start_line, start_col)
         
         return Token(TokenType.COLOR, color, start_line, start_col)
+    
+    def read_string(self) -> Token:
+        """
+        DFA for STRING token (quoted text).
+        Pattern: "[^"]*" or '[^']*'
+        
+        Supports both single and double quotes.
+        """
+        start_line = self.line
+        start_col = self.col
+        
+        quote = self.advance()  # consume opening quote
+        string = ''
+        
+        while self.peek() != quote and self.peek() != '\0' and self.peek() != '\n':
+            char = self.advance()
+            string += char
+        
+        if self.peek() == quote:
+            self.advance()  # consume closing quote
+        else:
+            self.error(f"Unterminated string literal: missing closing {quote}")
+        
+        return Token(TokenType.STRING, string, start_line, start_col)
     
     def tokenize(self) -> list[Token]:
         """
@@ -252,6 +274,11 @@ class Lexer:
                     if not next_char.isdigit():
                         self.tokens.append(self.read_binary_pattern())
                         continue
+            
+            # String literal (starts with quote)
+            if char in '"\'':
+                self.tokens.append(self.read_string())
+                continue
             
             # Number (starts with digit)
             if char.isdigit():

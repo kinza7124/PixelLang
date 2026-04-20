@@ -534,7 +534,7 @@ class PixelLangApp(tk.Tk):
     def highlight_syntax(self):
         """Apply syntax highlighting to editor content."""
         # Remove existing tags
-        for tag in ['keyword', 'color', 'number', 'comment']:
+        for tag in ['keyword', 'color', 'number', 'comment', 'string']:
             self.editor.tag_remove(tag, '1.0', tk.END)
         
         content = self.editor.get('1.0', tk.END)
@@ -584,6 +584,21 @@ class PixelLangApp(tk.Tk):
                 start_pos = f'{line_num}.{idx}'
                 end_pos = f'{line_num}.end'
                 self.editor.tag_add('comment', start_pos, end_pos)
+            
+            # Highlight strings (quoted text)
+            for quote in ['"', "'"]:
+                start_idx = 0
+                while True:
+                    start = line.find(quote, start_idx)
+                    if start == -1:
+                        break
+                    end = line.find(quote, start + 1)
+                    if end == -1:
+                        break  # Unterminated string, skip
+                    start_pos = f'{line_num}.{start}'
+                    end_pos = f'{line_num}.{end + 1}'
+                    self.editor.tag_add('string', start_pos, end_pos)
+                    start_idx = end + 1
         
         # Configure tag colors from current theme
         c = self.COLORS
@@ -591,6 +606,7 @@ class PixelLangApp(tk.Tk):
         self.editor.tag_config('color', foreground=c['color'])
         self.editor.tag_config('number', foreground=c['number'])
         self.editor.tag_config('comment', foreground=c['comment'], font=(self.FONT_FAMILY, self.FONT_SIZE, 'italic'))
+        self.editor.tag_config('string', foreground=c['string'])
     
     def clear_error_highlights(self):
         """Remove error highlighting from all lines."""

@@ -247,8 +247,9 @@ class CodeGenerator(NodeVisitor):
         self._draw_simple_text(x, y, node.text, node.color)
     
     def _draw_simple_text(self, x: int, y: int, text: str, color: str):
-        """Draw simple pixel-based text (uppercase only, 3x5 font)."""
-        # Simple 3x5 font for uppercase letters
+        """Draw simple pixel-based text (uppercase only, 3x5 font with space support)."""
+        # Simple 3x5 font for uppercase letters and numbers
+        # Space is handled separately - it advances cursor without drawing
         font = {
             'A': [0b010, 0b101, 0b111, 0b101, 0b101],
             'B': [0b110, 0b101, 0b110, 0b101, 0b110],
@@ -288,13 +289,19 @@ class CodeGenerator(NodeVisitor):
             '9': [0b010, 0b101, 0b011, 0b001, 0b010],
         }
         
-        for i, char in enumerate(text.upper()):
-            if char in font:
+        cursor_x = x
+        for char in text.upper():
+            if char == ' ':
+                # Space: advance cursor by 2 pixels (narrow space)
+                cursor_x += 2
+            elif char in font:
                 pattern = font[char]
                 for row, bits in enumerate(pattern):
                     for col in range(3):
                         if bits & (1 << (2 - col)):
-                            self.draw.rectangle([x + i*4 + col, y + row, x + i*4 + col, y + row], fill=color)
+                            self.draw.rectangle([cursor_x + col, y + row, cursor_x + col, y + row], fill=color)
+                # Advance cursor by 4 pixels (3 for char + 1 for spacing)
+                cursor_x += 4
     
     def visit_MirrorNode(self, node: MirrorNode):
         """

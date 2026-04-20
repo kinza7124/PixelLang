@@ -1,0 +1,22 @@
+// Text Demo with Multi-Word Support
+// Shows quoted strings with spaces
+
+CANVAS 120 80;
+
+// Dark background
+CLEAR #1A1A2E;
+
+// Single word (legacy style - still works)
+TEXT 10 10 HELLO #FFFFFF;
+
+// Multi-word with double quotes
+TEXT 10 25 "KINZA SHERYAN" #FF6B6B;
+
+// Multi-word with single quotes
+TEXT 10 40 'HELLO WORLD' #4ECDC4;
+
+// Longer text
+TEXT 10 55 "PIXEL LANG V2" #FFE66D;
+
+// Border frame
+BORDER 2 2 116 76 2 #4A4A6A;
