@@ -37,6 +37,7 @@ class LineNumberCanvas(tk.Canvas):
         self.config(width=50, highlightthickness=0)
         self.bg_color = '#151520'
         self.fg_color = '#6c6c80'
+        self.error_lines = set()  # Set of line numbers with errors
         
     def set_theme(self, colors, font_size=None):
         """Update colors based on theme."""
@@ -45,6 +46,16 @@ class LineNumberCanvas(tk.Canvas):
         self.config(bg=self.bg_color)
         if font_size:
             self.font_size = font_size
+        
+    def set_errors(self, lines):
+        """Set which lines have errors (for gutter markers)."""
+        self.error_lines = set(lines)
+        self.redraw()
+    
+    def clear_errors(self):
+        """Clear all error markers."""
+        self.error_lines.clear()
+        self.redraw()
         
     def redraw(self):
         """Redraw line numbers based on text widget content."""
@@ -56,8 +67,13 @@ class LineNumberCanvas(tk.Canvas):
             if dline is None:
                 break
             y = dline[1]
-            linenum = str(i).split('.')[0]
-            self.create_text(35, y, anchor='ne', text=linenum, fill=self.fg_color, font=('Consolas', self.font_size))
+            linenum = int(str(i).split('.')[0])
+            
+            # Draw error indicator if line has error
+            if linenum in self.error_lines:
+                self.create_oval(2, y + 4, 10, y + 12, fill='#ff4444', outline='', tags='error_marker')
+            
+            self.create_text(35, y, anchor='ne', text=str(linenum), fill=self.fg_color, font=('Consolas', self.font_size))
             i = self.text_widget.index(f'{i}+1line')
 
 
@@ -406,6 +422,67 @@ in the error panel with line numbers for easy navigation.
         self.geometry(f'{width}x{height}+{x}+{y}')
 
 
+class FindDialog(tk.Toplevel):
+    """Find text dialog for the editor."""
+    
+    def __init__(self, parent, editor, colors):
+        super().__init__(parent)
+        self.editor = editor
+        self.colors = colors
+        self.title('Find')
+        self.geometry('400x80')
+        self.resizable(False, False)
+        self.transient(parent)
+        self.configure(bg=colors['background'])
+        
+        frame = tk.Frame(self, bg=colors['background'])
+        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        tk.Label(frame, text='Find:', bg=colors['background'], fg=colors['foreground'], font=('Segoe UI', 10)).pack(side=tk.LEFT)
+        
+        self.entry = tk.Entry(frame, bg=colors['background'], fg=colors['foreground'], insertbackground=colors['insert'], font=('Segoe UI', 10))
+        self.entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        self.entry.focus_set()
+        
+        self.find_btn = tk.Button(frame, text='Find Next', command=self.find_next, bg=colors['button_bg'], fg=colors['foreground'], font=('Segoe UI', 9))
+        self.find_btn.pack(side=tk.LEFT, padx=2)
+        
+        self.bind('<Return>', lambda e: self.find_next())
+        self.bind('<Escape>', lambda e: self.destroy())
+        
+        self.last_index = '1.0'
+    
+    def find_next(self):
+        """Find next occurrence of search text."""
+        query = self.entry.get()
+        if not query:
+            return
+        
+        pos = self.editor.search(query, self.last_index, stopindex=tk.END)
+        if pos:
+            end_pos = f'{pos}+{len(query)}c'
+            self.editor.tag_remove('find', '1.0', tk.END)
+            self.editor.tag_add('find', pos, end_pos)
+            self.editor.tag_config('find', background=self.colors['highlight'], foreground=self.colors['background'])
+            self.editor.see(pos)
+            self.editor.mark_set(tk.INSERT, pos)
+            self.last_index = end_pos
+        else:
+            self.last_index = '1.0'
+            # Wrap around search
+            pos = self.editor.search(query, self.last_index, stopindex=tk.END)
+            if pos:
+                end_pos = f'{pos}+{len(query)}c'
+                self.editor.tag_remove('find', '1.0', tk.END)
+                self.editor.tag_add('find', pos, end_pos)
+                self.editor.tag_config('find', background=self.colors['highlight'], foreground=self.colors['background'])
+                self.editor.see(pos)
+                self.editor.mark_set(tk.INSERT, pos)
+                self.last_index = end_pos
+            else:
+                self.editor.tag_remove('find', '1.0', tk.END)
+
+
 class PixelLangApp(tk.Tk):
     """Main application window for PixelLang IDE."""
     
@@ -431,6 +508,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#2d2d4a',      # Menu
             'border': '#3d3d5c',       # Borders
             'highlight': '#4fc3f7',    # Accent
+            'current_line': '#2a2a40', # Current line highlight
         },
         'light': {
             'name': 'Light',
@@ -452,6 +530,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#f0f0f0',      # Menu
             'border': '#cccccc',       # Borders
             'highlight': '#0066cc',    # Accent
+            'current_line': '#e8f4fc', # Current line highlight
         },
         'high_contrast': {
             'name': 'High Contrast',
@@ -473,6 +552,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#000000',      # Black
             'border': '#ffffff',       # White
             'highlight': '#ffff00',    # Yellow
+            'current_line': '#1a1a1a', # Current line highlight
         },
         'monokai': {
             'name': 'Monokai',
@@ -494,6 +574,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#3e3d32',      # Dark
             'border': '#49483e',       # Gray
             'highlight': '#f92672',    # Pink
+            'current_line': '#3a3a3a', # Current line highlight
         },
         'dracula': {
             'name': 'Dracula',
@@ -515,6 +596,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#44475a',      # Gray
             'border': '#6272a4',       # Blue-gray
             'highlight': '#ff79c6',    # Pink
+            'current_line': '#3a3a4a', # Current line highlight
         },
         'solarized': {
             'name': 'Solarized Dark',
@@ -536,6 +618,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#073642',      # Darker
             'border': '#586e75',       # Gray
             'highlight': '#268bd2',    # Blue
+            'current_line': '#0a3a4a', # Current line highlight
         },
     }
     
@@ -583,6 +666,7 @@ class PixelLangApp(tk.Tk):
         
         self.setup_styles()
         self.setup_layout()
+        self.setup_file_info_bar()
         self.setup_editor()
         self.setup_preview()
         self.setup_toolbar()
@@ -672,64 +756,125 @@ class PixelLangApp(tk.Tk):
         )
         self.position_label.pack(side=tk.RIGHT, padx=(0, 10))
     
+    def _create_tool_btn(self, parent, text, command, tooltip='', width=8, bg_key='button_bg'):
+        """Create a modern flat toolbar button with hover effects."""
+        c = self.COLORS
+        btn = tk.Button(
+            parent,
+            text=text,
+            command=command,
+            bg=c[bg_key],
+            fg=c['foreground'],
+            font=('Segoe UI', 9),
+            relief=tk.FLAT,
+            bd=0,
+            cursor='hand2',
+            width=width,
+            activebackground=c['highlight'],
+            activeforeground=c['background']
+        )
+        if tooltip:
+            self._add_tooltip(btn, tooltip)
+        return btn
+    
+    def _add_tooltip(self, widget, text):
+        """Add a simple tooltip to a widget."""
+        def on_enter(event):
+            widget.tooltip = tk.Toplevel(widget)
+            widget.tooltip.overrideredirect(True)
+            widget.tooltip.geometry(f'+{event.x_root + 10}+{event.y_root + 20}')
+            tk.Label(widget.tooltip, text=text, bg='#333333', fg='white', font=('Segoe UI', 9), padx=6, pady=3).pack()
+        def on_leave(event):
+            if hasattr(widget, 'tooltip'):
+                widget.tooltip.destroy()
+                delattr(widget, 'tooltip')
+        widget.bind('<Enter>', on_enter)
+        widget.bind('<Leave>', on_leave)
+    
     def setup_toolbar(self):
-        """Create toolbar with action buttons."""
-        # Compile button
-        self.compile_btn = ttk.Button(
-            self.toolbar_frame, 
-            text='Compile & Run (Ctrl+Return)',
-            command=self.compile_and_run
+        """Create modern toolbar with icon-style buttons."""
+        c = self.COLORS
+        
+        # Toolbar background frame
+        toolbar_bg = tk.Frame(self.toolbar_frame, bg=c['button_bg'], height=40)
+        toolbar_bg.pack(fill=tk.X, expand=True)
+        toolbar_bg.pack_propagate(False)
+        self.toolbar_bg = toolbar_bg
+        
+        # File group
+        self.new_btn = self._create_tool_btn(toolbar_bg, '\u2B1C New', self.new_file, 'New File (Ctrl+N)', width=8)
+        self.new_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        
+        self.load_btn = self._create_tool_btn(toolbar_bg, '\u2B1C Open', self.load_file, 'Open File (Ctrl+O)', width=8)
+        self.load_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        
+        self.save_btn = self._create_tool_btn(toolbar_bg, '\u2B1C Save', self.save_file, 'Save File (Ctrl+S)', width=8)
+        self.save_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        
+        # Separator
+        tk.Frame(toolbar_bg, bg=c['border'], width=1).pack(side=tk.LEFT, fill=tk.Y, padx=8, pady=6)
+        
+        # Run group
+        self.compile_btn = self._create_tool_btn(
+            toolbar_bg, '\u25B6 Run', self.compile_and_run,
+            'Compile & Run (Ctrl+Return)', width=10, bg_key='highlight'
         )
-        self.compile_btn.pack(side=tk.LEFT, padx=5)
+        self.compile_btn.config(fg=c['background'], bg=c['highlight'])
+        self.compile_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
-        # Save PNG button
-        self.save_btn = ttk.Button(
-            self.toolbar_frame,
-            text='Save PNG',
-            command=self.save_png,
-            state=tk.DISABLED
+        self.save_png_btn = self._create_tool_btn(toolbar_bg, '\u2B1C Export', self.save_png, 'Save PNG', width=8)
+        self.save_png_btn.config(state=tk.DISABLED)
+        self.save_png_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        
+        # Separator
+        tk.Frame(toolbar_bg, bg=c['border'], width=1).pack(side=tk.LEFT, fill=tk.Y, padx=8, pady=6)
+        
+        # Zoom group
+        self.zoom_out_btn = self._create_tool_btn(toolbar_bg, '\u2212', self.zoom_out, 'Zoom Out (Ctrl+-)', width=3)
+        self.zoom_out_btn.pack(side=tk.LEFT, padx=1, pady=4)
+        
+        self.zoom_label = tk.Label(
+            toolbar_bg, text='100%', bg=c['button_bg'], fg=c['foreground'],
+            font=('Segoe UI', 9), width=5
         )
-        self.save_btn.pack(side=tk.LEFT, padx=5)
+        self.zoom_label.pack(side=tk.LEFT, padx=2, pady=4)
         
-        # Load File button
-        self.load_btn = ttk.Button(
-            self.toolbar_frame,
-            text='Load File',
-            command=self.load_file
-        )
-        self.load_btn.pack(side=tk.LEFT, padx=5)
+        self.zoom_in_btn = self._create_tool_btn(toolbar_bg, '+', self.zoom_in, 'Zoom In (Ctrl++)', width=3)
+        self.zoom_in_btn.pack(side=tk.LEFT, padx=1, pady=4)
         
-        # New File button
-        self.new_btn = ttk.Button(
-            self.toolbar_frame,
-            text='New',
-            command=self.new_file
-        )
-        self.new_btn.pack(side=tk.LEFT, padx=5)
+        self.zoom_reset_btn = self._create_tool_btn(toolbar_bg, '\u25A2 Fit', self.zoom_reset, 'Reset Zoom', width=5)
+        self.zoom_reset_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
-        # Zoom controls
-        ttk.Separator(self.toolbar_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
+        # Separator
+        tk.Frame(toolbar_bg, bg=c['border'], width=1).pack(side=tk.LEFT, fill=tk.Y, padx=8, pady=6)
         
-        ttk.Label(self.toolbar_frame, text='Zoom:').pack(side=tk.LEFT)
-        self.zoom_in_btn = ttk.Button(self.toolbar_frame, text='+', command=self.zoom_in, width=3)
-        self.zoom_in_btn.pack(side=tk.LEFT, padx=2)
-        
-        self.zoom_out_btn = ttk.Button(self.toolbar_frame, text='-', command=self.zoom_out, width=3)
-        self.zoom_out_btn.pack(side=tk.LEFT, padx=2)
-        
-        self.zoom_reset_btn = ttk.Button(self.toolbar_frame, text='Reset', command=self.zoom_reset)
-        self.zoom_reset_btn.pack(side=tk.LEFT, padx=2)
-        
-        # Grid overlay toggle
-        ttk.Separator(self.toolbar_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
+        # View options
         self.grid_var = tk.BooleanVar(value=False)
-        self.grid_check = ttk.Checkbutton(
-            self.toolbar_frame,
-            text='Grid',
-            variable=self.grid_var,
-            command=self.toggle_grid
+        self.grid_btn = self._create_tool_btn(
+            toolbar_bg, '\u25A6 Grid', self.toggle_grid, 'Toggle Grid', width=7
         )
-        self.grid_check.pack(side=tk.LEFT, padx=5)
+        self.grid_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        
+        self.find_btn = self._create_tool_btn(toolbar_bg, '\u1F50D Find', self.show_find_dialog, 'Find (Ctrl+F)', width=7)
+        self.find_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        
+        # Right-aligned help button
+        self.help_btn = self._create_tool_btn(toolbar_bg, '? Help', self.show_help, 'Help (F1)', width=8)
+        self.help_btn.pack(side=tk.RIGHT, padx=5, pady=4)
+    
+    def setup_file_info_bar(self):
+        """Create a breadcrumb/file info bar below toolbar."""
+        c = self.COLORS
+        self.file_info_bar = tk.Label(
+            self.main_frame,
+            text='untitled.px',
+            bg=c['button_bg'],
+            fg=c['foreground'],
+            font=('Segoe UI', 9),
+            anchor=tk.W,
+            padx=10
+        )
+        self.file_info_bar.pack(fill=tk.X, pady=(0, 2))
     
     def setup_editor(self):
         """Create code editor with line numbers and syntax highlighting."""
@@ -783,6 +928,13 @@ class PixelLangApp(tk.Tk):
         self.editor.bind('<MouseWheel>', self.on_editor_change)
         self.editor.bind('<Configure>', self.on_editor_change)
         self.editor.bind('<Motion>', self.update_position)
+        
+        # Current line highlight
+        self.editor.bind('<KeyRelease>', self.highlight_current_line, add='+')
+        self.editor.bind('<ButtonRelease>', self.highlight_current_line, add='+')
+        
+        # Auto-indent on brace
+        self.editor.bind('<Return>', self.on_editor_return)
         
         # Bind font shortcuts
         self.bind('<Control-plus>', self.increase_font)
@@ -974,6 +1126,7 @@ class PixelLangApp(tk.Tk):
         self.bind('<Control-z>', self.undo)
         self.bind('<Control-y>', self.redo)
         self.bind('<F1>', lambda e: self.show_help())
+        self.bind('<Control-f>', lambda e: self.show_find_dialog())
     
     def on_editor_change(self, event=None):
         """Handle editor changes - update line numbers and highlight."""
@@ -1063,6 +1216,7 @@ class PixelLangApp(tk.Tk):
         for line_num in self.error_lines:
             self.editor.tag_remove(f'error_{line_num}', f'{line_num}.0', f'{line_num}.end')
         self.error_lines = []
+        self.line_numbers.clear_errors()
     
     def highlight_error_line(self, line_num: int):
         """Highlight a line with an error."""
@@ -1093,6 +1247,7 @@ class PixelLangApp(tk.Tk):
             self.error_frame.pack(fill=tk.X, pady=(5, 0), before=self.status_frame)
             self.error_listbox.delete(0, tk.END)
             
+            error_line_nums = []
             for error in errors:
                 self.error_listbox.insert(tk.END, error)
                 self.log_console(f'Error: {error}', 'error')
@@ -1102,10 +1257,15 @@ class PixelLangApp(tk.Tk):
                 if match:
                     line_num = int(match.group(1))
                     self.highlight_error_line(line_num)
+                    error_line_nums.append(line_num)
+            
+            # Update gutter error markers
+            if error_line_nums:
+                self.line_numbers.set_errors(error_line_nums)
             
             # Update status
             self.status_bar.config(text=f'Compilation failed - {len(errors)} error(s)', foreground='#ff6b6b')
-            self.save_btn.config(state=tk.DISABLED)
+            self.save_png_btn.config(state=tk.DISABLED)
             self.log_console(f'Compilation failed in {elapsed:.1f}ms', 'error')
         else:
             # Hide error panel
@@ -1117,7 +1277,7 @@ class PixelLangApp(tk.Tk):
             
             # Update status
             self.status_bar.config(text='Compilation successful!', foreground='#4ec9b0')
-            self.save_btn.config(state=tk.NORMAL)
+            self.save_png_btn.config(state=tk.NORMAL)
             
             # Log success
             img_size = image.size if image else (0, 0)
@@ -1220,7 +1380,8 @@ class PixelLangApp(tk.Tk):
                 self.editor.insert('1.0', content)
                 self.on_editor_change()
                 self.current_image_path = filepath
-                self.title(f'PixelLang IDE - {filepath}')
+                self.file_info_bar.config(text=filepath)
+                self.title(f'PixelLang IDE - {os.path.basename(filepath)}')
                 self.status_bar.config(text=f'Loaded {filepath}', foreground='#4ec9b0')
                 # Clear previous compilation results
                 self.current_image = None
@@ -1232,7 +1393,7 @@ class PixelLangApp(tk.Tk):
                     font=('Segoe UI', 14),
                     tags='placeholder'
                 )
-                self.save_btn.config(state=tk.DISABLED)
+                self.save_png_btn.config(state=tk.DISABLED)
             except Exception as e:
                 messagebox.showerror('Error', f'Failed to load file: {e}')
     
@@ -1241,7 +1402,8 @@ class PixelLangApp(tk.Tk):
         self.editor.delete('1.0', tk.END)
         self.current_image = None
         self.current_image_path = None
-        self.title('PixelLang IDE - Compiler Construction Project')
+        self.title('PixelLang IDE - untitled.px')
+        self.file_info_bar.config(text='untitled.px')
         self.status_bar.config(text='New file', foreground=self.COLORS['foreground'])
         self.preview_canvas.delete('all')
         self.preview_canvas.create_text(
@@ -1251,7 +1413,7 @@ class PixelLangApp(tk.Tk):
             font=('Segoe UI', 14),
             tags='placeholder'
         )
-        self.save_btn.config(state=tk.DISABLED)
+        self.save_png_btn.config(state=tk.DISABLED)
         self.error_frame.pack_forget()
         self.clear_error_highlights()
         self.insert_sample_code()
@@ -1272,7 +1434,8 @@ class PixelLangApp(tk.Tk):
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(content)
                 self.current_image_path = filepath
-                self.title(f'PixelLang IDE - {filepath}')
+                self.file_info_bar.config(text=filepath)
+                self.title(f'PixelLang IDE - {os.path.basename(filepath)}')
                 self.status_bar.config(text=f'Saved {filepath}', foreground='#4ec9b0')
             except Exception as e:
                 messagebox.showerror('Error', f'Failed to save file: {e}')
@@ -1280,6 +1443,7 @@ class PixelLangApp(tk.Tk):
     def zoom_in(self):
         """Increase zoom level."""
         self.zoom_level *= 1.25
+        self.zoom_label.config(text=f'{int(self.zoom_level * 100)}%')
         if self.current_image:
             self.display_image()
     
@@ -1288,12 +1452,14 @@ class PixelLangApp(tk.Tk):
         self.zoom_level /= 1.25
         if self.zoom_level < 0.1:
             self.zoom_level = 0.1
+        self.zoom_label.config(text=f'{int(self.zoom_level * 100)}%')
         if self.current_image:
             self.display_image()
     
     def zoom_reset(self):
         """Reset zoom level."""
         self.zoom_level = 1.0
+        self.zoom_label.config(text='100%')
         if self.current_image:
             self.display_image()
     
@@ -1335,6 +1501,10 @@ class PixelLangApp(tk.Tk):
     def show_help(self):
         """Show professional help window with tabs."""
         HelpWindow(self, self.COLORS)
+    
+    def show_find_dialog(self):
+        """Open the Find dialog."""
+        FindDialog(self, self.editor, self.COLORS)
     
     def insert_sample_code(self):
         """Insert sample code into editor."""
@@ -1487,16 +1657,31 @@ SCALE 1;
             selectforeground=c['foreground']
         )
         
-        # Update status bar
+        # Update status bar and position label
         self.status_bar.config(
             background=c['status_bg'],
             foreground=c['foreground']
         )
+        self.position_label.config(
+            background=c['status_bg'],
+            foreground=c['foreground']
+        )
+        self.status_frame.config(bg=c['status_bg'])
+        
+        # Update file info bar if exists
+        if hasattr(self, 'file_info_bar'):
+            self.file_info_bar.config(
+                bg=c['button_bg'],
+                fg=c['foreground']
+            )
         
         # Note: error_frame is ttk.LabelFrame - bg is set via style, skip direct config
         
         # Re-highlight syntax with new colors
         self.highlight_syntax()
+        
+        # Update current line highlight color
+        self.editor.tag_config('current_line', background=c.get('current_line', '#2a2a40'))
         
         # Update status
         self.status_bar.config(text=f'Theme changed to {c["name"]}', foreground=c['highlight'])
@@ -1524,6 +1709,30 @@ SCALE 1;
         self.line_numbers.font_size = self.FONT_SIZE
         self.line_numbers.redraw()
         self.status_bar.config(text='Font size reset to 12', foreground=self.COLORS['highlight'])
+    
+    def highlight_current_line(self, event=None):
+        """Highlight the current line in the editor."""
+        self.editor.tag_remove('current_line', '1.0', tk.END)
+        line = self.editor.index(tk.INSERT).split('.')[0]
+        self.editor.tag_add('current_line', f'{line}.0', f'{line}.end')
+        self.editor.tag_config('current_line', background=self.COLORS.get('current_line', '#2a2a40'))
+    
+    def on_editor_return(self, event=None):
+        """Auto-indent on return, especially inside LOOP blocks."""
+        current_line = self.editor.index(tk.INSERT).split('.')[0]
+        line_text = self.editor.get(f'{current_line}.0', f'{current_line}.end')
+        
+        # Count current indentation (spaces at start)
+        indent = len(line_text) - len(line_text.lstrip())
+        
+        # If line ends with {, add extra indent
+        if line_text.rstrip().endswith('{'):
+            indent += 4
+        
+        # Insert newline + spaces
+        self.editor.insert(tk.INSERT, '\n' + ' ' * indent)
+        self.on_editor_change()
+        return 'break'  # Prevent default newline insertion
     
     def toggle_wrap(self):
         """Toggle word wrap in editor."""
