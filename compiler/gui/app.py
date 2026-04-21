@@ -422,65 +422,259 @@ in the error panel with line numbers for easy navigation.
         self.geometry(f'{width}x{height}+{x}+{y}')
 
 
-class FindDialog(tk.Toplevel):
-    """Find text dialog for the editor."""
+class FindReplaceDialog(tk.Toplevel):
+    """VS Code-style Find and Replace dialog."""
     
     def __init__(self, parent, editor, colors):
         super().__init__(parent)
         self.editor = editor
         self.colors = colors
-        self.title('Find')
-        self.geometry('400x80')
+        self.title('Find and Replace')
+        self.geometry('500x140')
         self.resizable(False, False)
         self.transient(parent)
         self.configure(bg=colors['background'])
         
-        frame = tk.Frame(self, bg=colors['background'])
-        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        tk.Label(frame, text='Find:', bg=colors['background'], fg=colors['foreground'], font=('Segoe UI', 10)).pack(side=tk.LEFT)
-        
-        self.entry = tk.Entry(frame, bg=colors['background'], fg=colors['foreground'], insertbackground=colors['insert'], font=('Segoe UI', 10))
-        self.entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        self.entry.focus_set()
-        
-        self.find_btn = tk.Button(frame, text='Find Next', command=self.find_next, bg=colors['button_bg'], fg=colors['foreground'], font=('Segoe UI', 9))
-        self.find_btn.pack(side=tk.LEFT, padx=2)
-        
-        self.bind('<Return>', lambda e: self.find_next())
-        self.bind('<Escape>', lambda e: self.destroy())
-        
         self.last_index = '1.0'
+        self.match_case = tk.BooleanVar(value=False)
+        
+        # Find row
+        find_frame = tk.Frame(self, bg=colors['background'])
+        find_frame.pack(fill=tk.X, padx=10, pady=(10, 5))
+        
+        tk.Label(find_frame, text='Find:', bg=colors['background'], fg=colors['foreground'], 
+                 font=('Segoe UI', 10), width=8, anchor='e').pack(side=tk.LEFT)
+        
+        self.find_entry = tk.Entry(find_frame, bg=colors['background'], fg=colors['foreground'], 
+                                   insertbackground=colors['insert'], font=('Segoe UI', 10))
+        self.find_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        self.find_entry.focus_set()
+        
+        # Find buttons
+        btn_frame = tk.Frame(find_frame, bg=colors['background'])
+        btn_frame.pack(side=tk.LEFT)
+        
+        self.prev_btn = tk.Button(btn_frame, text='←', command=self.find_prev, 
+                                  bg=colors['button_bg'], fg=colors['foreground'], 
+                                  font=('Segoe UI', 9), width=3)
+        self.prev_btn.pack(side=tk.LEFT, padx=2)
+        self._add_tooltip(self.prev_btn, 'Find Previous (Shift+Enter)')
+        
+        self.next_btn = tk.Button(btn_frame, text='→', command=self.find_next, 
+                                  bg=colors['button_bg'], fg=colors['foreground'], 
+                                  font=('Segoe UI', 9), width=3)
+        self.next_btn.pack(side=tk.LEFT, padx=2)
+        self._add_tooltip(self.next_btn, 'Find Next (Enter)')
+        
+        # Replace row
+        replace_frame = tk.Frame(self, bg=colors['background'])
+        replace_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        tk.Label(replace_frame, text='Replace:', bg=colors['background'], fg=colors['foreground'], 
+                 font=('Segoe UI', 10), width=8, anchor='e').pack(side=tk.LEFT)
+        
+        self.replace_entry = tk.Entry(replace_frame, bg=colors['background'], fg=colors['foreground'], 
+                                      insertbackground=colors['insert'], font=('Segoe UI', 10))
+        self.replace_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        
+        # Replace buttons
+        replace_btn_frame = tk.Frame(replace_frame, bg=colors['background'])
+        replace_btn_frame.pack(side=tk.LEFT)
+        
+        self.replace_btn = tk.Button(replace_btn_frame, text='Replace', command=self.replace_one, 
+                                     bg=colors['button_bg'], fg=colors['foreground'], 
+                                     font=('Segoe UI', 9))
+        self.replace_btn.pack(side=tk.LEFT, padx=2)
+        
+        self.replace_all_btn = tk.Button(replace_btn_frame, text='Replace All', command=self.replace_all, 
+                                          bg=colors['button_bg'], fg=colors['foreground'], 
+                                          font=('Segoe UI', 9))
+        self.replace_all_btn.pack(side=tk.LEFT, padx=2)
+        
+        # Options row
+        options_frame = tk.Frame(self, bg=colors['background'])
+        options_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        self.match_case_check = tk.Checkbutton(options_frame, text='Match Case', 
+                                               variable=self.match_case,
+                                               bg=colors['background'], fg=colors['foreground'],
+                                               selectcolor=colors['button_bg'],
+                                               font=('Segoe UI', 9))
+        self.match_case_check.pack(side=tk.LEFT)
+        
+        # Close button
+        self.close_btn = tk.Button(options_frame, text='Close', command=self.destroy, 
+                                   bg=colors['button_bg'], fg=colors['foreground'], 
+                                   font=('Segoe UI', 9))
+        self.close_btn.pack(side=tk.RIGHT)
+        
+        # Status label
+        self.status_label = tk.Label(self, text='', bg=colors['background'], 
+                                     fg=colors['highlight'], font=('Segoe UI', 9))
+        self.status_label.pack(fill=tk.X, padx=10, pady=(0, 5))
+        
+        # Bindings
+        self.bind('<Return>', lambda e: self.find_next())
+        self.bind('<Shift-Return>', lambda e: self.find_prev())
+        self.bind('<Escape>', lambda e: self.destroy())
+    
+    def _add_tooltip(self, widget, text):
+        """Add a simple tooltip to a widget."""
+        def on_enter(event):
+            widget.tooltip = tk.Toplevel(widget)
+            widget.tooltip.overrideredirect(True)
+            widget.tooltip.geometry(f'+{event.x_root + 10}+{event.y_root + 20}')
+            tk.Label(widget.tooltip, text=text, bg='#333333', fg='white', 
+                     font=('Segoe UI', 9), padx=6, pady=3).pack()
+        def on_leave(event):
+            if hasattr(widget, 'tooltip'):
+                widget.tooltip.destroy()
+                delattr(widget, 'tooltip')
+        widget.bind('<Enter>', on_enter)
+        widget.bind('<Leave>', on_leave)
+    
+    def _get_search_args(self):
+        """Get search arguments based on options."""
+        args = {}
+        if not self.match_case.get():
+            args['nocase'] = True
+        return args
     
     def find_next(self):
         """Find next occurrence of search text."""
-        query = self.entry.get()
+        query = self.find_entry.get()
         if not query:
+            self.status_label.config(text='No search term')
             return
         
-        pos = self.editor.search(query, self.last_index, stopindex=tk.END)
+        args = self._get_search_args()
+        pos = self.editor.search(query, self.last_index, stopindex=tk.END, **args)
+        
         if pos:
             end_pos = f'{pos}+{len(query)}c'
-            self.editor.tag_remove('find', '1.0', tk.END)
-            self.editor.tag_add('find', pos, end_pos)
-            self.editor.tag_config('find', background=self.colors['highlight'], foreground=self.colors['background'])
-            self.editor.see(pos)
-            self.editor.mark_set(tk.INSERT, pos)
+            self._highlight_match(pos, end_pos)
             self.last_index = end_pos
+            self.status_label.config(text=f'Found at {pos}')
         else:
+            # Wrap around
             self.last_index = '1.0'
-            # Wrap around search
-            pos = self.editor.search(query, self.last_index, stopindex=tk.END)
+            pos = self.editor.search(query, self.last_index, stopindex=tk.END, **args)
             if pos:
                 end_pos = f'{pos}+{len(query)}c'
-                self.editor.tag_remove('find', '1.0', tk.END)
-                self.editor.tag_add('find', pos, end_pos)
-                self.editor.tag_config('find', background=self.colors['highlight'], foreground=self.colors['background'])
-                self.editor.see(pos)
-                self.editor.mark_set(tk.INSERT, pos)
+                self._highlight_match(pos, end_pos)
                 self.last_index = end_pos
+                self.status_label.config(text=f'Wrapped to beginning, found at {pos}')
             else:
                 self.editor.tag_remove('find', '1.0', tk.END)
+                self.status_label.config(text='No matches found')
+    
+    def find_prev(self):
+        """Find previous occurrence of search text."""
+        query = self.find_entry.get()
+        if not query:
+            self.status_label.config(text='No search term')
+            return
+        
+        args = self._get_search_args()
+        # Search backwards from current position
+        current = self.editor.index(tk.INSERT)
+        
+        # Get all text before current position
+        text = self.editor.get('1.0', current)
+        
+        # Find last occurrence
+        idx = text.rfind(query)
+        if idx != -1:
+            # Convert to line.col format
+            lines = text[:idx].count('\n')
+            last_newline = text[:idx].rfind('\n')
+            col = idx - (last_newline + 1) if last_newline != -1 else idx
+            pos = f'{lines + 1}.{col}'
+            end_pos = f'{pos}+{len(query)}c'
+            self._highlight_match(pos, end_pos)
+            self.last_index = pos
+            self.status_label.config(text=f'Found at {pos}')
+        else:
+            # Wrap to end
+            text = self.editor.get('1.0', tk.END)
+            idx = text.rfind(query)
+            if idx != -1:
+                lines = text[:idx].count('\n')
+                last_newline = text[:idx].rfind('\n')
+                col = idx - (last_newline + 1) if last_newline != -1 else idx
+                pos = f'{lines + 1}.{col}'
+                end_pos = f'{pos}+{len(query)}c'
+                self._highlight_match(pos, end_pos)
+                self.last_index = pos
+                self.status_label.config(text=f'Wrapped to end, found at {pos}')
+            else:
+                self.editor.tag_remove('find', '1.0', tk.END)
+                self.status_label.config(text='No matches found')
+    
+    def _highlight_match(self, start, end):
+        """Highlight a match in the editor."""
+        self.editor.tag_remove('find', '1.0', tk.END)
+        self.editor.tag_add('find', start, end)
+        self.editor.tag_config('find', background=self.colors['highlight'], 
+                               foreground=self.colors['background'])
+        self.editor.see(start)
+        self.editor.mark_set(tk.INSERT, start)
+    
+    def replace_one(self):
+        """Replace current match and find next."""
+        query = self.find_entry.get()
+        replacement = self.replace_entry.get()
+        
+        if not query:
+            self.status_label.config(text='No search term')
+            return
+        
+        # Check if we have a current match selected
+        sel_start = self.editor.index('find.first')
+        sel_end = self.editor.index('find.last')
+        
+        if sel_start and sel_end:
+            # Replace the selection
+            self.editor.delete(sel_start, sel_end)
+            self.editor.insert(sel_start, replacement)
+            self.last_index = sel_start
+            self.status_label.config(text='Replaced')
+            # Find next
+            self.find_next()
+        else:
+            # No selection, just find next
+            self.find_next()
+    
+    def replace_all(self):
+        """Replace all occurrences."""
+        query = self.find_entry.get()
+        replacement = self.replace_entry.get()
+        
+        if not query:
+            self.status_label.config(text='No search term')
+            return
+        
+        args = self._get_search_args()
+        count = 0
+        self.last_index = '1.0'
+        
+        while True:
+            pos = self.editor.search(query, self.last_index, stopindex=tk.END, **args)
+            if not pos:
+                break
+            
+            end_pos = f'{pos}+{len(query)}c'
+            self.editor.delete(pos, end_pos)
+            self.editor.insert(pos, replacement)
+            count += 1
+            self.last_index = f'{pos}+{len(replacement)}c'
+        
+        self.editor.tag_remove('find', '1.0', tk.END)
+        self.status_label.config(text=f'Replaced {count} occurrence(s)')
+
+
+# Alias for backward compatibility
+FindDialog = FindReplaceDialog
 
 
 class PixelLangApp(tk.Tk):
@@ -855,7 +1049,7 @@ class PixelLangApp(tk.Tk):
         )
         self.grid_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
-        self.find_btn = self._create_tool_btn(toolbar_bg, '\u1F50D Find', self.show_find_dialog, 'Find (Ctrl+F)', width=7)
+        self.find_btn = self._create_tool_btn(toolbar_bg, 'Search', self.show_find_dialog, 'Find (Ctrl+F)', width=7)
         self.find_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
         # Right-aligned help button
@@ -1143,7 +1337,46 @@ class PixelLangApp(tk.Tk):
         content = self.editor.get('1.0', tk.END)
         lines = content.split('\n')
         
+        # Track multi-line comments (/* */)
+        in_multiline_comment = False
+        multiline_start_line = 0
+        multiline_start_col = 0
+        
         for line_num, line in enumerate(lines, start=1):
+            # Handle multi-line comments (/* */)
+            if in_multiline_comment:
+                end_idx = line.find('*/')
+                if end_idx != -1:
+                    # End of multi-line comment found
+                    end_pos = f'{line_num}.{end_idx + 2}'
+                    start_pos = f'{multiline_start_line}.{multiline_start_col}'
+                    self.editor.tag_add('comment', start_pos, end_pos)
+                    in_multiline_comment = False
+                    # Continue processing rest of line after */
+                    line = line[end_idx + 2:]
+                else:
+                    # Still in multi-line comment, skip this line's highlighting
+                    continue
+            
+            # Check for start of multi-line comment
+            start_idx = line.find('/*')
+            if start_idx != -1:
+                end_idx = line.find('*/', start_idx + 2)
+                if end_idx != -1:
+                    # Single-line /* */ comment
+                    start_pos = f'{line_num}.{start_idx}'
+                    end_pos = f'{line_num}.{end_idx + 2}'
+                    self.editor.tag_add('comment', start_pos, end_pos)
+                    # Remove commented part from line for further processing
+                    line = line[:start_idx] + line[end_idx + 2:]
+                else:
+                    # Start of multi-line comment that continues
+                    in_multiline_comment = True
+                    multiline_start_line = line_num
+                    multiline_start_col = start_idx
+                    # Process only the part before /*
+                    line = line[:start_idx]
+            
             # Highlight keywords
             for keyword in self.KEYWORDS:
                 start_idx = 0

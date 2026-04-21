@@ -1,0 +1,22 @@
+/*
+ * Multi-line Comment Demo
+ * This demonstrates the new block comment syntax
+ * You can write detailed documentation across multiple lines
+ */
+
+CANVAS 100 100;
+
+/* Single-line block comment */ CLEAR #1A1A2E;
+
+/*
+   Draw a pattern of pixels
+   Using a simple loop
+*/
+LOOP 5 {
+    /* Each iteration draws a pixel */
+    PIXEL 10 10 #FF0000; /* Red pixel */
+    PIXEL 20 20 #00FF00; /* Green pixel */
+    /* This is a nested comment test */
+}
+
+/* End of demonstration */

@@ -91,6 +91,23 @@ class Lexer:
             self.advance()
             iterations += 1
     
+    def skip_multiline_comment(self):
+        """Skip /* */ multi-line comment."""
+        # We've already seen /*, so consume until */
+        max_iterations = len(self.source) + 10
+        iterations = 0
+        while iterations < max_iterations:
+            char = self.peek()
+            if char == '':
+                self.error("Unterminated multi-line comment: missing */")
+                break
+            if char == '*' and self.pos + 1 < len(self.source) and self.source[self.pos + 1] == '/':
+                self.advance()  # consume *
+                self.advance()  # consume /
+                break
+            self.advance()
+            iterations += 1
+    
     def read_word(self) -> Token:
         """
         DFA for words (keywords or identifiers).
@@ -247,12 +264,18 @@ class Lexer:
                 self.tokens.append(Token(TokenType.SEMICOLON, ';', start_line, start_col))
                 continue
             
-            # Comment check (//)
-            if char == '/' and self.pos + 1 < len(self.source) and self.source[self.pos + 1] == '/':
-                self.advance()  # consume first /
-                self.advance()  # consume second /
-                self.skip_comment()
-                continue
+            # Comment check (// or /* */)
+            if char == '/' and self.pos + 1 < len(self.source):
+                if self.source[self.pos + 1] == '/':
+                    self.advance()  # consume first /
+                    self.advance()  # consume second /
+                    self.skip_comment()
+                    continue
+                elif self.source[self.pos + 1] == '*':
+                    self.advance()  # consume /
+                    self.advance()  # consume *
+                    self.skip_multiline_comment()
+                    continue
             
             # Color literal (starts with #)
             if char == '#':
