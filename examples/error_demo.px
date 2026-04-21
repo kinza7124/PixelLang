@@ -1,0 +1,36 @@
+// Error Demo - Intentional errors to test graceful error handling
+// This file contains deliberate mistakes for testing the IDE
+
+// ERROR 1: Missing CANVAS declaration (Semantic Rule SEM-01)
+// The first statement must be CANVAS
+PIXEL 10 10 #FF0000;
+
+// ERROR 2: Missing semicolon (Syntax Error)
+CANVAS 200 200
+
+// ERROR 3: Invalid color literal (Lexical Error)
+CLEAR #GGGGGG;
+
+// ERROR 4: Negative canvas dimensions (Semantic Rule SEM-03)
+CANVAS -100 -100;
+
+// ERROR 5: Missing closing brace for LOOP (Syntax Error)
+LOOP 5 {
+    PIXEL 10 10 #FF0000;
+
+// ERROR 6: Out of bounds pixel (Semantic Rule SEM-04)
+PIXEL 500 500 #FFFFFF;
+
+// ERROR 7: Invalid keyword (Lexical Error)
+DRAW_CIRCLE 50 50 20 #00FF00;
+
+// ERROR 8: Missing parentheses/expression
+RECT 10 10 20;
+
+// ERROR 9: Extra CANVAS after first (Semantic Rule SEM-02)
+CANVAS 300 300;
+
+// ERROR 10: LOOP with zero or negative count (Semantic Rule SEM-12)
+LOOP 0 {
+    PIXEL 5 5 #0000FF;
+}
