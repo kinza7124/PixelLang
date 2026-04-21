@@ -5,16 +5,51 @@ LL(1) Recursive Descent Parser implementing the formal grammar.
 
 Grammar (BNF):
     <program>       ::= <statement>* EOF
-    <statement>     ::= <canvas_stmt> | <pixel_stmt> | <rect_stmt> | <line_stmt>
-                       | <circle_stmt> | <loop_stmt> | <translate_stmt> | <rotate_stmt>
+    <statement>     ::= <canvas_stmt> | <draw_stmt> | <transform_stmt> | <control_stmt>
+                       | <advanced_stmt> | <variable_stmt>
+    
     <canvas_stmt>   ::= CANVAS NUMBER NUMBER SEMICOLON
+    
+    <draw_stmt>     ::= <pixel_stmt> | <rect_stmt> | <line_stmt> | <circle_stmt>
+                       | <ellipse_stmt> | <triangle_stmt> | <arc_stmt> | <polygon_stmt>
+                       | <border_stmt> | <fill_stmt> | <clear_stmt> | <text_stmt>
+                       | <star_stmt> | <heart_stmt> | <arrow_stmt> | <roundrect_stmt>
+                       | <bezier_stmt> | <sprite_stmt>
+    
     <pixel_stmt>    ::= PIXEL NUMBER NUMBER COLOR SEMICOLON
     <rect_stmt>     ::= RECT NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
     <line_stmt>     ::= LINE NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
     <circle_stmt>   ::= CIRCLE NUMBER NUMBER NUMBER COLOR SEMICOLON
-    <loop_stmt>     ::= LOOP NUMBER LBRACE <statement>* RBRACE
+    <ellipse_stmt>  ::= ELLIPSE NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <triangle_stmt> ::= TRIANGLE NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <arc_stmt>      ::= ARC NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <polygon_stmt>  ::= POLYGON NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <border_stmt>   ::= BORDER NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <fill_stmt>     ::= FILL NUMBER NUMBER COLOR SEMICOLON
+    <clear_stmt>    ::= CLEAR COLOR SEMICOLON
+    <text_stmt>     ::= TEXT NUMBER NUMBER (STRING | IDENT) COLOR SEMICOLON
+    <star_stmt>     ::= STAR NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <heart_stmt>    ::= HEART NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <arrow_stmt>    ::= ARROW NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <roundrect_stmt>::= ROUNDRECT NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <bezier_stmt>   ::= BEZIER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER COLOR SEMICOLON
+    <sprite_stmt>   ::= SPRITE NUMBER NUMBER IDENT COLOR SEMICOLON
+    
+    <transform_stmt>::= <translate_stmt> | <rotate_stmt> | <scale_stmt> | <mirror_stmt>
     <translate_stmt>::= TRANSLATE NUMBER NUMBER SEMICOLON
     <rotate_stmt>   ::= ROTATE NUMBER SEMICOLON
+    <scale_stmt>    ::= SCALE NUMBER SEMICOLON
+    <mirror_stmt>   ::= MIRROR NUMBER SEMICOLON
+    
+    <control_stmt>  ::= <loop_stmt> | <palette_stmt> | <setpalette_stmt> | <random_stmt>
+    <loop_stmt>     ::= LOOP NUMBER LBRACE <statement>* RBRACE
+    <palette_stmt>  ::= PALETTE NUMBER COLOR SEMICOLON
+    <setpalette_stmt>::= SETPALETTE NUMBER SEMICOLON
+    <random_stmt>   ::= RANDOM NUMBER NUMBER SEMICOLON
+    
+    <variable_stmt> ::= <var_stmt> | <set_stmt>
+    <var_stmt>      ::= VAR IDENT NUMBER SEMICOLON
+    <set_stmt>      ::= SET IDENT NUMBER SEMICOLON
 
 This is LL(1) because each statement alternative starts with a distinct keyword,
 so we can select the production with one token of lookahead.

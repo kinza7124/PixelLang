@@ -690,6 +690,616 @@
     </div>
 
     <!-- ══════════════════════════════════════════════
+         SECTION 1.5: COMPILER PHASES PROJECT REPORT
+    ══════════════════════════════════════════════ -->
+    <div class="section" id="compiler-phases">
+      <div class="section-header">
+        <span class="section-num">§ 01b</span>
+        <span class="section-title">Compiler Phases — Project Report</span>
+      </div>
+      <p class="section-desc">Detailed architectural breakdown of the PixelLang compiler pipeline with phase diagrams, data transformations, and component mapping.</p>
+
+      <style>
+        .pipeline-container {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin: 24px 0;
+          padding: 20px;
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          border-radius: 12px;
+          border: 2px solid #4a5568;
+        }
+        .phase-row {
+          display: flex;
+          align-items: stretch;
+          gap: 12px;
+        }
+        .phase-box {
+          flex: 1;
+          padding: 16px;
+          border-radius: 8px;
+          text-align: center;
+          position: relative;
+          transition: all 0.3s ease;
+        }
+        .phase-box:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .phase-lexer { background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%); }
+        .phase-parser { background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%); }
+        .phase-ast { background: linear-gradient(135deg, #d69e2e 0%, #b7791f 100%); }
+        .phase-symbol { background: linear-gradient(135deg, #38a169 0%, #2f855a 100%); }
+        .phase-semantic { background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%); }
+        .phase-codegen { background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%); }
+        .phase-output { background: linear-gradient(135deg, #d53f8c 0%, #b83280 100%); }
+        .phase-title {
+          font-weight: 700;
+          font-size: 14px;
+          color: white;
+          margin-bottom: 6px;
+        }
+        .phase-file {
+          font-family: 'Fira Code', monospace;
+          font-size: 11px;
+          color: rgba(255,255,255,0.9);
+          background: rgba(0,0,0,0.3);
+          padding: 2px 8px;
+          border-radius: 4px;
+          display: inline-block;
+          margin-bottom: 8px;
+        }
+        .phase-desc {
+          font-size: 12px;
+          color: rgba(255,255,255,0.85);
+          line-height: 1.4;
+        }
+        .arrow-down {
+          text-align: center;
+          color: #a0aec0;
+          font-size: 24px;
+          margin: -4px 0;
+        }
+        .data-flow {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 16px;
+          background: rgba(74,85,104,0.3);
+          border-radius: 6px;
+          font-family: 'Fira Code', monospace;
+          font-size: 11px;
+          color: #a0aec0;
+        }
+        .data-flow span {
+          color: #68d391;
+        }
+        .phase-detail-card {
+          background: #2d3748;
+          border: 1px solid #4a5568;
+          border-radius: 8px;
+          padding: 16px;
+          margin: 12px 0;
+        }
+        .phase-detail-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #4a5568;
+        }
+        .phase-badge {
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 18px;
+          color: white;
+        }
+        .phase-detail-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #e2e8f0;
+        }
+        .phase-detail-subtitle {
+          font-size: 13px;
+          color: #a0aec0;
+          font-family: 'Fira Code', monospace;
+        }
+        .detail-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+        .detail-item h4 {
+          font-size: 12px;
+          color: #68d391;
+          margin-bottom: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .detail-item p, .detail-item ul {
+          font-size: 13px;
+          color: #cbd5e0;
+          line-height: 1.6;
+        }
+        .detail-item ul {
+          margin: 0;
+          padding-left: 16px;
+        }
+        .detail-item li {
+          margin-bottom: 4px;
+        }
+        .transformation-box {
+          background: #1a202c;
+          border: 1px dashed #4a5568;
+          border-radius: 6px;
+          padding: 12px;
+          text-align: center;
+          margin: 8px 0;
+        }
+        .transformation-box .from {
+          color: #fc8181;
+          font-family: 'Fira Code', monospace;
+          font-size: 12px;
+        }
+        .transformation-box .arrow {
+          color: #a0aec0;
+          margin: 4px 0;
+        }
+        .transformation-box .to {
+          color: #68d391;
+          font-family: 'Fira Code', monospace;
+          font-size: 12px;
+        }
+        .component-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 16px 0;
+          font-size: 13px;
+        }
+        .component-table th {
+          background: #4a5568;
+          color: white;
+          padding: 10px 12px;
+          text-align: left;
+          font-weight: 600;
+        }
+        .component-table td {
+          padding: 10px 12px;
+          border-bottom: 1px solid #2d3748;
+          color: #e2e8f0;
+        }
+        .component-table tr:nth-child(even) {
+          background: rgba(45,55,72,0.5);
+        }
+        .error-flow {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          padding: 16px;
+          background: linear-gradient(90deg, #742a2a 0%, #9b2c2c 50%, #742a2a 100%);
+          border-radius: 8px;
+          margin: 16px 0;
+        }
+        .error-flow-text {
+          color: #feb2b2;
+          font-size: 14px;
+        }
+        .success-flow {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          padding: 16px;
+          background: linear-gradient(90deg, #22543d 0%, #276749 50%, #22543d 100%);
+          border-radius: 8px;
+          margin: 16px 0;
+        }
+        .success-flow-text {
+          color: #9ae6b4;
+          font-size: 14px;
+        }
+      </style>
+
+      <!-- PIPELINE DIAGRAM -->
+      <div class="pipeline-container">
+        <h3 style="text-align:center; color:#e2e8f0; margin:0 0 16px 0; font-size:16px;">🔄 PixelLang Compiler Pipeline Flow</h3>
+        
+        <div class="phase-row">
+          <div class="phase-box phase-lexer">
+            <div class="phase-title">🔍 LEXICAL ANALYSIS</div>
+            <div class="phase-file">lexer.py</div>
+            <div class="phase-desc">Tokenization & DFA</div>
+          </div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="data-flow"><span>Source Code (.px)</span> → <span>List&lt;Token&gt;</span></div>
+        
+        <div class="phase-row">
+          <div class="phase-box phase-parser">
+            <div class="phase-title">🌳 SYNTAX ANALYSIS</div>
+            <div class="phase-file">parser.py</div>
+            <div class="phase-desc">LL(1) Parser & Grammar</div>
+          </div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="data-flow"><span>List&lt;Token&gt;</span> → <span>AST (ProgramNode)</span></div>
+        
+        <div class="phase-row">
+          <div class="phase-box phase-ast" style="flex: 2;">
+            <div class="phase-title">📝 AST CONSTRUCTION</div>
+            <div class="phase-file">ast_nodes.py</div>
+            <div class="phase-desc">Node Objects & Visitor Pattern</div>
+          </div>
+          <div class="phase-box phase-symbol" style="flex: 1;">
+            <div class="phase-title">📚 SYMBOL TABLE</div>
+            <div class="phase-file">symbol_table.py</div>
+            <div class="phase-desc">Scope Stack</div>
+          </div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="data-flow"><span>AST</span> → <span>AST + SymbolTable</span></div>
+        
+        <div class="phase-row">
+          <div class="phase-box phase-semantic">
+            <div class="phase-title">✓ SEMANTIC ANALYSIS</div>
+            <div class="phase-file">semantic.py</div>
+            <div class="phase-desc">37 Validation Rules</div>
+          </div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="data-flow"><span>AST + SymbolTable</span> → <span>Validated AST</span> or <span style="color:#fc8181;">SemanticErrors[]</span></div>
+        
+        <div class="phase-row">
+          <div class="phase-box phase-codegen">
+            <div class="phase-title">🎨 CODE GENERATION</div>
+            <div class="phase-file">codegen.py</div>
+            <div class="phase-desc">PIL Image Generation</div>
+          </div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="data-flow"><span>Validated AST</span> → <span>PNG Image</span></div>
+        
+        <div class="phase-row">
+          <div class="phase-box phase-output">
+            <div class="phase-title">🖼️ OUTPUT</div>
+            <div class="phase-file">output.png</div>
+            <div class="phase-desc">Rendered Pixel Art</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERROR HANDLING FLOW -->
+      <div class="error-flow">
+        <span style="font-size:20px;">⚠️</span>
+        <span class="error-flow-text">Errors are collected at each phase and propagated. All errors reported together — execution does not stop at first error.</span>
+        <span style="font-size:20px;">⚠️</span>
+      </div>
+
+      <!-- DETAILED PHASE BREAKDOWN -->
+      <h3 style="color:#e2e8f0; margin:32px 0 16px 0; font-size:18px;">📋 Detailed Phase Breakdown</h3>
+
+      <!-- Phase 1: Lexical Analysis -->
+      <div class="phase-detail-card">
+        <div class="phase-detail-header">
+          <div class="phase-badge" style="background:linear-gradient(135deg, #e53e3e 0%, #c53030 100%);">01</div>
+          <div>
+            <div class="phase-detail-title">Lexical Analysis (Tokenizer)</div>
+            <div class="phase-detail-subtitle">File: compiler/lexer.py | Class: Lexer</div>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <h4>Input</h4>
+            <p>Raw PixelLang source code string (.px files)</p>
+          </div>
+          <div class="detail-item">
+            <h4>Output</h4>
+            <p>List of Token objects with type, value, line, column</p>
+          </div>
+          <div class="detail-item">
+            <h4>Algorithm</h4>
+            <ul>
+              <li>Deterministic Finite Automaton (DFA)</li>
+              <li>State machine with explicit transitions</li>
+              <li>Character-by-character scanning</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>Recognizes</h4>
+            <ul>
+              <li>30+ Keywords (CANVAS, PIXEL, RECT, etc.)</li>
+              <li>Numbers: [0-9]+</li>
+              <li>Colors: #[A-Fa-f0-9]{6}</li>
+              <li>Identifiers: [a-zA-Z_][a-zA-Z0-9_]*</li>
+              <li>Strings: "..." or '...'</li>
+              <li>Punctuation: { } ;</li>
+              <li>Comments: // and /* */</li>
+            </ul>
+          </div>
+        </div>
+        <div class="transformation-box">
+          <div class="from">CANVAS 100 100; PIXEL 10 10 #FF0000;</div>
+          <div class="arrow">↓ Tokenization ↓</div>
+          <div class="to">[CANVAS, NUMBER(100), NUMBER(100), SEMICOLON, PIXEL, NUMBER(10), NUMBER(10), COLOR(#FF0000), SEMICOLON]</div>
+        </div>
+      </div>
+
+      <!-- Phase 2: Syntax Analysis -->
+      <div class="phase-detail-card">
+        <div class="phase-detail-header">
+          <div class="phase-badge" style="background:linear-gradient(135deg, #dd6b20 0%, #c05621 100%);">02</div>
+          <div>
+            <div class="phase-detail-title">Syntax Analysis (Parser)</div>
+            <div class="phase-detail-subtitle">File: compiler/parser.py | Class: Parser</div>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <h4>Input</h4>
+            <p>List of Token objects from Lexer</p>
+          </div>
+          <div class="detail-item">
+            <h4>Output</h4>
+            <p>Abstract Syntax Tree (AST) with ProgramNode as root</p>
+          </div>
+          <div class="detail-item">
+            <h4>Algorithm</h4>
+            <ul>
+              <li>LL(1) Recursive Descent Parser</li>
+              <li>Top-down parsing with one token lookahead</li>
+              <li>Grammar-driven production rules</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>Grammar Rules</h4>
+            <ul>
+              <li>&lt;program&gt; ::= &lt;statement&gt;* EOF</li>
+              <li>&lt;statement&gt; ::= &lt;canvas&gt; | &lt;draw&gt; | &lt;transform&gt; | &lt;control&gt;</li>
+              <li>Each keyword starts distinct production</li>
+              <li>LL(1) property: single token lookahead sufficient</li>
+            </ul>
+          </div>
+        </div>
+        <div class="transformation-box">
+          <div class="from">Token Stream</div>
+          <div class="arrow">↓ Parsing ↓</div>
+          <div class="to">AST: ProgramNode → [CanvasNode, PixelNode, LoopNode...]</div>
+        </div>
+      </div>
+
+      <!-- Phase 3: AST & Symbol Table -->
+      <div class="phase-detail-card">
+        <div class="phase-detail-header">
+          <div class="phase-badge" style="background:linear-gradient(135deg, #d69e2e 0%, #38a169 100%);">03</div>
+          <div>
+            <div class="phase-detail-title">AST Construction & Symbol Table</div>
+            <div class="phase-detail-subtitle">Files: ast_nodes.py, symbol_table.py</div>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <h4>AST Structure</h4>
+            <ul>
+              <li>Base class: ASTNode with accept() method</li>
+              <li>Visitor pattern for traversal</li>
+              <li>Each command has dedicated node class</li>
+              <li>30+ node types: PixelNode, RectNode, etc.</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>Symbol Table</h4>
+            <ul>
+              <li>Scope stack implementation</li>
+              <li>Symbol storage: name → type, value</li>
+              <li>Variable tracking (VAR, SET commands)</li>
+              <li>Palette slot management</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>NodeVisitor</h4>
+            <ul>
+              <li>Abstract visitor base class</li>
+              <li>visit() dispatch method</li>
+              <li>Used by Semantic Analyzer & CodeGen</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>ASTPrinter</h4>
+            <ul>
+              <li>Debug visualization</li>
+              <li>Tree structure printing</li>
+              <li>Useful for development</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 4: Semantic Analysis -->
+      <div class="phase-detail-card">
+        <div class="phase-detail-header">
+          <div class="phase-badge" style="background:linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);">04</div>
+          <div>
+            <div class="phase-detail-title">Semantic Analysis</div>
+            <div class="phase-detail-subtitle">File: compiler/semantic.py | Class: SemanticAnalyzer</div>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <h4>Input</h4>
+            <p>AST + Symbol Table from previous phases</p>
+          </div>
+          <div class="detail-item">
+            <h4>Output</h4>
+            <p>Validated AST OR List of SemanticError objects</p>
+          </div>
+          <div class="detail-item">
+            <h4>37 Semantic Rules</h4>
+            <ul>
+              <li>SEM-01: CANVAS must be first statement</li>
+              <li>SEM-02: CANVAS declared at most once</li>
+              <li>SEM-03: Canvas dimensions positive</li>
+              <li>SEM-04 to SEM-37: Bounds, types, values</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>Validation Types</h4>
+            <ul>
+              <li>Type checking: numbers vs strings</li>
+              <li>Bounds checking: coordinates within canvas</li>
+              <li>Value checking: positive dimensions</li>
+              <li>Scope checking: variable existence</li>
+            </ul>
+          </div>
+        </div>
+        <div class="transformation-box">
+          <div class="from">AST with potential semantic errors</div>
+          <div class="arrow">↓ 37 Validation Checks ↓</div>
+          <div class="to">Validated AST or Error List (all errors reported)</div>
+        </div>
+      </div>
+
+      <!-- Phase 5: Code Generation -->
+      <div class="phase-detail-card">
+        <div class="phase-detail-header">
+          <div class="phase-badge" style="background:linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">05</div>
+          <div>
+            <div class="phase-detail-title">Code Generation</div>
+            <div class="phase-detail-subtitle">File: compiler/codegen.py | Class: CodeGenerator</div>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <h4>Input</h4>
+            <p>Validated AST (semantically correct)</p>
+          </div>
+          <div class="detail-item">
+            <h4>Output</h4>
+            <p>PNG image file (via Pillow/PIL)</p>
+          </div>
+          <div class="detail-item">
+            <h4>Technology</h4>
+            <ul>
+              <li>Pillow (PIL) image library</li>
+              <li>RGBA color mode support</li>
+              <li>Anti-aliasing for smooth shapes</li>
+              <li>Transform matrix operations</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>Transform Stack</h4>
+            <ul>
+              <li>TRANSLATE accumulation in loops</li>
+              <li>ROTATE angle accumulation</li>
+              <li>SCALE factor application</li>
+              <li>MIRROR axis flipping</li>
+            </ul>
+          </div>
+        </div>
+        <div class="transformation-box">
+          <div class="from">Validated AST with drawing commands</div>
+          <div class="arrow">↓ AST Walk + Drawing ↓</div>
+          <div class="to">PNG Image (80x80, 100x100, etc.)</div>
+        </div>
+      </div>
+
+      <!-- Component Mapping Table -->
+      <h3 style="color:#e2e8f0; margin:32px 0 16px 0; font-size:18px;">📁 Component-to-File Mapping</h3>
+      <table class="component-table">
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>File</th>
+            <th>Main Class/Function</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Lexical Analysis</td>
+            <td class="mono">compiler/lexer.py</td>
+            <td class="mono">Lexer</td>
+            <td>Tokenize source code using DFA</td>
+          </tr>
+          <tr>
+            <td>Syntax Analysis</td>
+            <td class="mono">compiler/parser.py</td>
+            <td class="mono">Parser</td>
+            <td>Build AST using LL(1) recursive descent</td>
+          </tr>
+          <tr>
+            <td>AST Nodes</td>
+            <td class="mono">compiler/ast_nodes.py</td>
+            <td class="mono">30+ Node classes</td>
+            <td>Define AST structure and visitor</td>
+          </tr>
+          <tr>
+            <td>Symbol Table</td>
+            <td class="mono">compiler/symbol_table.py</td>
+            <td class="mono">SymbolTable</td>
+            <td>Manage variable scopes and symbols</td>
+          </tr>
+          <tr>
+            <td>Semantic Analysis</td>
+            <td class="mono">compiler/semantic.py</td>
+            <td class="mono">SemanticAnalyzer</td>
+            <td>37 validation rules for correctness</td>
+          </tr>
+          <tr>
+            <td>Code Generation</td>
+            <td class="mono">compiler/codegen.py</td>
+            <td class="mono">CodeGenerator</td>
+            <td>Generate PNG from AST</td>
+          </tr>
+          <tr>
+            <td>Error Handling</td>
+            <td class="mono">compiler/errors.py</td>
+            <td class="mono">4 Error classes</td>
+            <td>Unified error reporting system</td>
+          </tr>
+          <tr>
+            <td>Token Types</td>
+            <td class="mono">compiler/tokens.py</td>
+            <td class="mono">TokenType, Token</td>
+            <td>Token definitions and reserved words</td>
+          </tr>
+          <tr>
+            <td>Integration</td>
+            <td class="mono">compiler/__init__.py</td>
+            <td class="mono">compile_source()</td>
+            <td>Orchestrate all compiler phases</td>
+          </tr>
+          <tr>
+            <td>CLI</td>
+            <td class="mono">main.py</td>
+            <td class="mono">main()</td>
+            <td>Command-line interface</td>
+          </tr>
+          <tr>
+            <td>GUI IDE</td>
+            <td class="mono">compiler/gui/app.py</td>
+            <td class="mono">PixelLangApp</td>
+            <td>Integrated Development Environment</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Success Flow -->
+      <div class="success-flow">
+        <span style="font-size:20px;">✓</span>
+        <span class="success-flow-text">Successful compilation: Source Code → Tokens → AST → Validated AST → PNG Image</span>
+        <span style="font-size:20px;">✓</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
          SECTION 2: CHARACTER SET
     ══════════════════════════════════════════════ -->
     <div class="section" id="alphabet">

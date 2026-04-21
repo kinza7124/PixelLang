@@ -3,6 +3,17 @@ PixelLang Code Generator
 =========================
 Final compiler phase that generates PNG images using Pillow (PIL).
 
+Supports 30+ drawing commands:
+Basic: CANVAS, PIXEL, RECT, LINE, CIRCLE, ELLIPSE, TRIANGLE, ARC, POLYGON
+Fill: FILL, CLEAR, BORDER
+Text: TEXT
+Transform: TRANSLATE, ROTATE, SCALE, MIRROR
+Control: LOOP
+Advanced (v2.0): BEZIER, STAR, HEART, ARROW, ROUNDRECT, SPRITE
+Palette: PALETTE, SETPALETTE
+Variables: VAR, SET
+Utility: RANDOM
+
 Maintains a transform stack to handle TRANSLATE accumulation within LOOP bodies.
 Key insight: TRANSLATE values accumulate inside loops, creating patterns.
 After a loop exits, the transform is restored to its pre-loop value.

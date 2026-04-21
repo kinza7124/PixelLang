@@ -1,13 +1,14 @@
 """
 PixelLang Semantic Analyzer
 ============================
-Semantic analysis phase that checks:
-1. CANVAS is the first statement (SEM-01)
+Semantic analysis phase with 37 validation rules:
+
+Core Rules (SEM-01 to SEM-13):
+1. CANVAS must be first statement (SEM-01)
 2. CANVAS declared at most once (SEM-02)
 3. Canvas dimensions positive (SEM-03)
-4. PIXEL x within bounds (SEM-04)
-5. PIXEL y within bounds (SEM-05)
-6. Color format valid (SEM-06)
+4-5. PIXEL coordinates within bounds (SEM-04, SEM-05)
+6. Color format valid #RRGGBB (SEM-06)
 7. Rectangle dimensions positive (SEM-07)
 8. Rectangle within bounds (SEM-08)
 9. Line endpoints within bounds (SEM-09)
@@ -15,6 +16,29 @@ Semantic analysis phase that checks:
 11. Circle within bounds (SEM-11)
 12. Loop count positive (SEM-12)
 13. Rotate angle 0-360 (SEM-13)
+
+Extended Rules (SEM-14 to SEM-26):
+14. FILL position within bounds (SEM-14)
+15-16. Ellipse radii positive and within bounds (SEM-15, SEM-16)
+17-18. Border dimensions positive and within bounds (SEM-17, SEM-18)
+19. Triangle vertices within bounds (SEM-19)
+20-22. Arc radius positive, center within bounds, angles 0-360 (SEM-20, SEM-21, SEM-22)
+23. Polygon points within bounds (SEM-23)
+24. Text position within bounds (SEM-24)
+25. Mirror axis 0 or 1 (SEM-25)
+26. Scale factor 1-10 (SEM-26)
+
+v2.0 Rules (SEM-27 to SEM-37):
+27. Bezier points within bounds (SEM-27)
+28. Star parameters valid (SEM-28)
+29. RoundRect within bounds (SEM-29)
+30. Heart within bounds (SEM-30)
+31. Arrow endpoints within bounds (SEM-31)
+32-33. Palette index 0-15 (SEM-32, SEM-33)
+34. Sprite pattern valid 0/1 (SEM-34)
+35. Random range valid (SEM-35)
+36. Variable definition (SEM-36)
+37. Variable assignment exists (SEM-37)
 
 Collects ALL errors (doesn't stop at first error).
 """

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 class TokenType(Enum):
     """All token types in PixelLang."""
     
-    # Keywords (18 reserved words)
+    # Keywords (30+ reserved words)
     CANVAS = auto()
     PIXEL = auto()
     RECT = auto()

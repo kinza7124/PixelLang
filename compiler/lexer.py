@@ -4,12 +4,14 @@ PixelLang Lexer (Lexical Analyzer)
 Deterministic Finite Automaton (DFA) based lexer that tokenizes PixelLang source code.
 
 The lexer recognizes:
-- Keywords (8 reserved words: CANVAS, PIXEL, RECT, LINE, CIRCLE, LOOP, TRANSLATE, ROTATE)
+- Keywords (30+ reserved words: CANVAS, PIXEL, RECT, LINE, CIRCLE, LOOP, etc.)
 - Numbers (sequences of digits)
 - Colors (hex codes like #FF0000)
 - Identifiers (letter/underscore followed by alphanumeric)
 - Punctuation ({, }, ;)
-- Comments (// to end of line - discarded)
+- Comments (// to end of line, /* */ multi-line - discarded)
+- Strings (single or double quoted)
+- Binary patterns (for SPRITE command)
 - Whitespace (skipped)
 """
 from .tokens import Token, TokenType, RESERVED_WORDS
@@ -124,6 +126,9 @@ class Lexer:
         char = self.peek()
         if char.isalpha() or char == '_':
             word += self.advance()
+        else:
+            # This shouldn't happen if called correctly, but handle gracefully
+            self.error(f"Expected letter or underscore, got '{char}'")
         
         # q1 loop: read more letters, digits, or underscores
         while True:
@@ -199,7 +204,7 @@ class Lexer:
             else:
                 self.error(f"Invalid color format: expected 6 hex digits after #, got '{char}'")
                 # Try to recover by skipping to whitespace
-                while self.peek() not in ' \t\n' and self.peek() != '\0':
+                while self.peek() not in ' \t\n' and self.peek() != '':
                     self.advance()
                 return Token(TokenType.COLOR, color, start_line, start_col)
         
