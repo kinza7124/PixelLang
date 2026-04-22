@@ -10,7 +10,7 @@ CLEAR #1A1A2E;
 TEXT 10 10 HELLO #FFFFFF;
 
 // Multi-word with double quotes
-TEXT 10 25 "KINZA SHERYAN" #FF6B6B;
+TEXT 10 25 "KINZA" #FF6B6B;
 
 // Multi-word with single quotes
 TEXT 10 40 'HELLO WORLD' #4ECDC4;
