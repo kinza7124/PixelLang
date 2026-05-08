@@ -702,7 +702,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#2d2d4a',      # Menu
             'border': '#3d3d5c',       # Borders
             'highlight': '#4fc3f7',    # Accent
-            'current_line': '#2a2a40', # Current line highlight
+            'current_line': '#1e1e32', # Current line highlight - much more subtle
         },
         'light': {
             'name': 'Light',
@@ -724,7 +724,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#f0f0f0',      # Menu
             'border': '#cccccc',       # Borders
             'highlight': '#0066cc',    # Accent
-            'current_line': '#e8f4fc', # Current line highlight
+            'current_line': '#f8fcff', # Current line highlight - much more subtle
         },
         'high_contrast': {
             'name': 'High Contrast',
@@ -746,7 +746,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#000000',      # Black
             'border': '#ffffff',       # White
             'highlight': '#ffff00',    # Yellow
-            'current_line': '#1a1a1a', # Current line highlight
+            'current_line': '#0f0f0f', # Current line highlight - much more subtle
         },
         'monokai': {
             'name': 'Monokai',
@@ -768,7 +768,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#3e3d32',      # Dark
             'border': '#49483e',       # Gray
             'highlight': '#f92672',    # Pink
-            'current_line': '#3a3a3a', # Current line highlight
+            'current_line': '#2a2a2a', # Current line highlight - much more subtle
         },
         'dracula': {
             'name': 'Dracula',
@@ -790,7 +790,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#44475a',      # Gray
             'border': '#6272a4',       # Blue-gray
             'highlight': '#ff79c6',    # Pink
-            'current_line': '#3a3a4a', # Current line highlight
+            'current_line': '#2a2a3a', # Current line highlight - much more subtle
         },
         'solarized': {
             'name': 'Solarized Dark',
@@ -812,7 +812,7 @@ class PixelLangApp(tk.Tk):
             'menu_bg': '#073642',      # Darker
             'border': '#586e75',       # Gray
             'highlight': '#268bd2',    # Blue
-            'current_line': '#0a3a4a', # Current line highlight
+            'current_line': '#052535', # Current line highlight - much more subtle
         },
     }
     
@@ -829,9 +829,13 @@ class PixelLangApp(tk.Tk):
         'SPRITE', 'RANDOM', 'VAR', 'SET'
     ]
     
-    # Editor settings
-    FONT_FAMILY = 'Consolas'
+    # Editor settings - improved for better text rendering
+    FONT_FAMILY = 'Consolas'  # Monospace for code
     FONT_SIZE = 12
+    
+    # Font rendering improvements
+    FONT_SMOOTHING = True
+    FONT_HINTING = 'default'
     
     def __init__(self):
         super().__init__()
@@ -996,13 +1000,13 @@ class PixelLangApp(tk.Tk):
         self.toolbar_bg = toolbar_bg
         
         # File group
-        self.new_btn = self._create_tool_btn(toolbar_bg, '\u2B1C New', self.new_file, 'New File (Ctrl+N)', width=8)
+        self.new_btn = self._create_tool_btn(toolbar_bg, 'New', self.new_file, 'New File (Ctrl+N)', width=8)
         self.new_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
-        self.load_btn = self._create_tool_btn(toolbar_bg, '\u2B1C Open', self.load_file, 'Open File (Ctrl+O)', width=8)
+        self.load_btn = self._create_tool_btn(toolbar_bg, 'Open', self.load_file, 'Open File (Ctrl+O)', width=8)
         self.load_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
-        self.save_btn = self._create_tool_btn(toolbar_bg, '\u2B1C Save', self.save_file, 'Save File (Ctrl+S)', width=8)
+        self.save_btn = self._create_tool_btn(toolbar_bg, 'Save', self.save_file, 'Save File (Ctrl+S)', width=8)
         self.save_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
         # Separator
@@ -1016,7 +1020,7 @@ class PixelLangApp(tk.Tk):
         self.compile_btn.config(fg=c['background'], bg=c['highlight'])
         self.compile_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
-        self.save_png_btn = self._create_tool_btn(toolbar_bg, '\u2B1C Export', self.save_png, 'Save PNG', width=8)
+        self.save_png_btn = self._create_tool_btn(toolbar_bg, 'Export', self.save_png, 'Save PNG', width=8)
         self.save_png_btn.config(state=tk.DISABLED)
         self.save_png_btn.pack(side=tk.LEFT, padx=2, pady=4)
         
@@ -1123,9 +1127,12 @@ class PixelLangApp(tk.Tk):
         self.editor.bind('<Configure>', self.on_editor_change)
         self.editor.bind('<Motion>', self.update_position)
         
-        # Current line highlight
-        self.editor.bind('<KeyRelease>', self.highlight_current_line, add='+')
-        self.editor.bind('<ButtonRelease>', self.highlight_current_line, add='+')
+        # Current line highlight - only update on mouse click and cursor movement, not every keystroke
+        self.editor.bind('<ButtonRelease-1>', self.highlight_current_line, add='+')
+        self.editor.bind('<Up>', self.highlight_current_line, add='+')
+        self.editor.bind('<Down>', self.highlight_current_line, add='+')
+        self.editor.bind('<Left>', self.highlight_current_line, add='+')
+        self.editor.bind('<Right>', self.highlight_current_line, add='+')
         
         # Auto-indent on brace
         self.editor.bind('<Return>', self.on_editor_return)
@@ -1312,6 +1319,7 @@ class PixelLangApp(tk.Tk):
     
     def bind_shortcuts(self):
         """Bind keyboard shortcuts."""
+        # Bind to main window
         self.bind('<Control-Return>', lambda e: self.compile_and_run())
         self.bind('<Control-r>', lambda e: self.compile_and_run())
         self.bind('<Control-n>', lambda e: self.new_file())
@@ -1321,6 +1329,41 @@ class PixelLangApp(tk.Tk):
         self.bind('<Control-y>', self.redo)
         self.bind('<F1>', lambda e: self.show_help())
         self.bind('<Control-f>', lambda e: self.show_find_dialog())
+        self.bind('<Control-equal>', self.increase_font)
+        self.bind('<Control-plus>', self.increase_font)
+        self.bind('<Control-KP_Add>', self.increase_font)
+        self.bind('<Control-minus>', self.decrease_font)
+        self.bind('<Control-KP_Subtract>', self.decrease_font)
+        
+        # Also bind to editor widget for when it has focus
+        self.editor.bind('<Control-Return>', lambda e: self.compile_and_run())
+        self.editor.bind('<Control-r>', lambda e: self.compile_and_run())
+        self.editor.bind('<Control-n>', lambda e: self.new_file())
+        self.editor.bind('<Control-o>', lambda e: self.load_file())
+        self.editor.bind('<Control-s>', lambda e: self.save_file())
+        self.editor.bind('<Control-z>', self.undo)
+        self.editor.bind('<Control-y>', self.redo)
+        # F1 is only bound to main window to prevent duplicate help dialogs
+        self.editor.bind('<Control-f>', lambda e: self.show_find_dialog())
+        self.editor.bind('<Control-equal>', self.increase_font)
+        self.editor.bind('<Control-plus>', self.increase_font)
+        self.editor.bind('<Control-KP_Add>', self.increase_font)
+        self.editor.bind('<Control-minus>', self.decrease_font)
+        self.editor.bind('<Control-KP_Subtract>', self.decrease_font)
+    
+    def format_error_message(self, error: str) -> str:
+        """Format error message with phase-specific color coding."""
+        # Add phase-specific color indicators
+        if error.startswith('[LEXER]'):
+            return f"🔴 {error}"
+        elif error.startswith('[PARSER]'):
+            return f"🟠 {error}"
+        elif error.startswith('[SEMANTIC]'):
+            return f"🟡 {error}"
+        elif error.startswith('[CODEGEN]'):
+            return f"🟣 {error}"
+        else:
+            return f"⚫ {error}"
     
     def on_editor_change(self, event=None):
         """Handle editor changes - update line numbers and highlight."""
@@ -1476,14 +1519,17 @@ class PixelLangApp(tk.Tk):
         elapsed = (time.time() - start_time) * 1000
         
         if errors:
-            # Show errors
+            # Show errors with enhanced formatting
             self.error_frame.pack(fill=tk.X, pady=(5, 0), before=self.status_frame)
             self.error_listbox.delete(0, tk.END)
             
             error_line_nums = []
             for error in errors:
-                self.error_listbox.insert(tk.END, error)
-                self.log_console(f'Error: {error}', 'error')
+                # Add phase-specific color coding
+                formatted_error = self.format_error_message(error)
+                self.error_listbox.insert(tk.END, formatted_error)
+                self.log_console(f'Error: {formatted_error}', 'error')
+                
                 # Try to extract line number and highlight
                 import re
                 match = re.search(r'line (\d+)', error)
@@ -1496,10 +1542,22 @@ class PixelLangApp(tk.Tk):
             if error_line_nums:
                 self.line_numbers.set_errors(error_line_nums)
             
-            # Update status
-            self.status_bar.config(text=f'Compilation failed - {len(errors)} error(s)', foreground='#ff6b6b')
+            # Update status with phase info
+            error_phases = set()
+            for error in errors:
+                if error.startswith('[LEXER]'):
+                    error_phases.add('Lexer')
+                elif error.startswith('[PARSER]'):
+                    error_phases.add('Parser')
+                elif error.startswith('[SEMANTIC]'):
+                    error_phases.add('Semantic')
+                elif error.startswith('[CODEGEN]'):
+                    error_phases.add('Code Generation')
+            
+            phase_info = ', '.join(error_phases) if error_phases else 'Compilation'
+            self.status_bar.config(text=f'{phase_info} failed - {len(errors)} error(s)', foreground='#ff6b6b')
             self.save_png_btn.config(state=tk.DISABLED)
-            self.log_console(f'Compilation failed in {elapsed:.1f}ms', 'error')
+            self.log_console(f'{phase_info} failed in {elapsed:.1f}ms', 'error')
         else:
             # Hide error panel
             self.error_frame.pack_forget()
@@ -1631,13 +1689,17 @@ class PixelLangApp(tk.Tk):
                 messagebox.showerror('Error', f'Failed to load file: {e}')
     
     def new_file(self):
-        """Clear editor for new file."""
+        """Clear editor for new file - completely clean slate."""
+        # Clear editor completely
         self.editor.delete('1.0', tk.END)
         self.current_image = None
         self.current_image_path = None
+        self.current_file_path = None
         self.title('PixelLang IDE - untitled.px')
         self.file_info_bar.config(text='untitled.px')
-        self.status_bar.config(text='New file', foreground=self.COLORS['foreground'])
+        self.status_bar.config(text='New file ready', foreground=self.COLORS['foreground'])
+        
+        # Clear preview
         self.preview_canvas.delete('all')
         self.preview_canvas.create_text(
             200, 200,
@@ -1646,10 +1708,15 @@ class PixelLangApp(tk.Tk):
             font=('Segoe UI', 14),
             tags='placeholder'
         )
+        
+        # Reset UI state
         self.save_png_btn.config(state=tk.DISABLED)
         self.error_frame.pack_forget()
         self.clear_error_highlights()
-        self.insert_sample_code()
+        
+        # Focus on editor - no sample code, completely clean
+        self.editor.focus_set()
+        self.editor.mark_set(tk.INSERT, '1.0')
     
     def save_file(self):
         """Save editor content to file."""
@@ -1698,6 +1765,7 @@ class PixelLangApp(tk.Tk):
     
     def toggle_grid(self):
         """Toggle grid overlay on preview."""
+        self.grid_var.set(not self.grid_var.get())
         self.display_image()
     
     def draw_grid(self, canvas_width, canvas_height, img_width, img_height, x, y):
@@ -1737,7 +1805,7 @@ class PixelLangApp(tk.Tk):
     
     def show_find_dialog(self):
         """Open the Find dialog."""
-        FindDialog(self, self.editor, self.COLORS)
+        FindReplaceDialog(self, self.editor, self.COLORS)
     
     def insert_sample_code(self):
         """Insert sample code into editor."""
@@ -1797,6 +1865,63 @@ SCALE 1;
 '''
         self.editor.insert('1.0', sample)
         self.on_editor_change()
+    
+    def get_sample_code(self):
+        """Return the sample code as a string."""
+        return '''// PixelLang Sample Program
+// Tests all 18 keywords including advanced features
+
+CANVAS 100 100;
+
+// Clear with dark background
+CLEAR #1A1A2E;
+
+// Draw an arc (semicircle)
+ARC 50 30 20 0 180 #E94560;
+
+// Draw a 4-point polygon (diamond)
+POLYGON 50 10 60 30 50 50 40 30 #16C79A;
+
+// Draw pixel text
+TEXT 35 88 HI #FFFFFF;
+
+// Draw ellipse with different radii
+ELLIPSE 20 70 12 6 #F9A825;
+
+// Draw circle
+CIRCLE 80 70 8 #E91E63;
+
+// Draw triangle
+TRIANGLE 10 40 30 40 20 25 #00BCD4;
+
+// Draw border frame
+BORDER 2 2 96 96 2 #4A4A6A;
+
+// Draw rectangle
+RECT 75 10 15 12 #9C27B0;
+
+// Draw line
+LINE 50 50 85 70 #FF9800;
+
+// Place pixel
+PIXEL 50 60 #FFFFFF;
+
+// Flood fill
+FILL 5 5 #16213E;
+
+// Loop with translate and rotate
+LOOP 3 {
+    PIXEL 15 15 #A8D8EA;
+    TRANSLATE 5 0;
+    ROTATE 15;
+}
+
+// Mirror context
+MIRROR 0;
+
+// Scale drawing
+SCALE 1;
+'''
     
     def undo(self, event=None):
         """Undo last change."""
@@ -1974,6 +2099,8 @@ SCALE 1;
         self.editor.config(wrap=new_wrap)
         status = 'enabled' if new_wrap == 'word' else 'disabled'
         self.status_bar.config(text=f'Word wrap {status}', foreground=self.COLORS['highlight'])
+
+
 
 
 def run_gui():

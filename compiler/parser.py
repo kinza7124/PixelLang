@@ -95,10 +95,28 @@ class Parser:
         """
         tok = self.current()
         if tok.type != expected_type:
-            raise ParseError(
-                f"Expected {expected_type.name}, got '{tok.value}' ({tok.type.name})",
-                tok.line, tok.col
-            )
+            # If we hit EOF, provide better context about incomplete statements
+            if tok.type == TokenType.EOF:
+                if expected_type == TokenType.NUMBER:
+                    raise ParseError(
+                        f"Incomplete statement - expected {expected_type.name} but reached end of file. Check if you're missing parameters or a semicolon.",
+                        tok.line, tok.col
+                    )
+                elif expected_type == TokenType.SEMICOLON:
+                    raise ParseError(
+                        f"Incomplete statement - expected semicolon ';' but reached end of file. Add semicolon to complete the statement.",
+                        tok.line, tok.col
+                    )
+                else:
+                    raise ParseError(
+                        f"Incomplete statement - expected {expected_type.name} but reached end of file.",
+                        tok.line, tok.col
+                    )
+            else:
+                raise ParseError(
+                    f"Expected {expected_type.name}, got '{tok.value}' ({tok.type.name})",
+                    tok.line, tok.col
+                )
         return self.advance()
     
     def expect_number(self) -> int:
@@ -240,13 +258,23 @@ class Parser:
         """
         tok = self.advance()  # consume RECT
         line = tok.line
-        x = self.expect_number()
-        y = self.expect_number()
-        w = self.expect_number()
-        h = self.expect_number()
-        color = self.expect_color()
-        self.expect(TokenType.SEMICOLON)
-        return RectNode(x, y, w, h, color, line)
+        try:
+            x = self.expect_number()
+            y = self.expect_number()
+            w = self.expect_number()
+            h = self.expect_number()
+            color = self.expect_color()
+            self.expect(TokenType.SEMICOLON)
+            return RectNode(x, y, w, h, color, line)
+        except ParseError as e:
+            # If we hit EOF, report the error on the actual statement line
+            if "end of file" in str(e):
+                raise ParseError(
+                    f"Incomplete RECT statement on line {line} - RECT requires 4 numbers, a color, and semicolon (e.g., 'RECT 10 20 30 40 #FF0000;')",
+                    line, 1
+                )
+            else:
+                raise
     
     def parse_line(self) -> LineNode:
         """

@@ -50,18 +50,18 @@ def compile_source(source: str) -> tuple:
         try:
             tokens = lex(source)
         except PixelLangError as e:
-            return None, [str(e)]
+            return None, [f"[LEXER] {str(e)}"]
         
         # Phase 2: Syntax Analysis
         try:
             ast = parse(tokens)
         except PixelLangError as e:
-            return None, [str(e)]
+            return None, [f"[PARSER] {str(e)}"]
         
         # Phase 3: Semantic Analysis
         semantic_errors = analyze(ast)
         if semantic_errors:
-            return None, [str(e) for e in semantic_errors]
+            return None, [f"[SEMANTIC] {str(e)}" for e in semantic_errors]
 
         # Optional Phase: AST Optimizations (safe, semantics-preserving)
         try:
@@ -74,7 +74,7 @@ def compile_source(source: str) -> tuple:
         try:
             image = generate(ast)
         except PixelLangError as e:
-            return None, [str(e)]
+            return None, [f"[CODEGEN] {str(e)}"]
         
         return image, []
         
