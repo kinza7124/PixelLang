@@ -1630,3 +1630,10 @@ Each phase is independent, testable, and well-documented.
 - [codegen.py](compiler/codegen.py) — PNG generation
 - [tests/test_compiler.py](tests/test_compiler.py) — Integration tests
 - [tests/test_optimizer.py](tests/test_optimizer.py) — Optimization tests
+ - [lexer.py](../compiler/lexer.py) — Tokenization
+ - [parser.py](../compiler/parser.py) — Syntax analysis
+ - [semantic.py](../compiler/semantic.py) — Semantic rules + symbol table
+ - [optimizer.py](../compiler/optimizer.py) — AST optimizations
+ - [codegen.py](../compiler/codegen.py) — PNG generation
+ - [tests/test_compiler.py](../tests/test_compiler.py) — Integration tests
+ - [tests/test_optimizer.py](../tests/test_optimizer.py) — Optimization tests

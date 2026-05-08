@@ -210,7 +210,7 @@ graph LR
 ## References
 
 - [Full Documentation](DOCUMENTATION.md)
-- [Implementation Guide](IMPLEMENTATION_GUIDE.md)
-- [Lexer DFA Details](docs/diagrams/lexer_dfa.md)
-- [Symbol Table Details](docs/diagrams/symbol_table_diagram.md)
-- [Parse Tree Examples](docs/diagrams/parse_trees_examples.md)
+- [Implementation Guide](../IMPLEMENTATION_GUIDE.md)
+- [Lexer DFA Details](diagrams/lexer_dfa.md)
+- [Symbol Table Details](diagrams/symbol_table_diagram.md)
+- [Parse Tree Examples](diagrams/parse_trees_examples.md)
