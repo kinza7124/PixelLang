@@ -4,15 +4,19 @@ Requires: pip install pyinstaller
 """
 import PyInstaller.__main__
 import os
+import sys
 
 # Build the GUI executable
+sep = ';' if os.name == 'nt' else ':'
+data_arg = f"examples{sep}examples"
+
 PyInstaller.__main__.run([
     'main.py',
     '--name=PixelLangIDE',
     '--onefile',
     '--windowed',
     '--icon=NONE',
-    '--add-data=examples;examples',
+    f'--add-data={data_arg}',
     '--clean'
 ])
 

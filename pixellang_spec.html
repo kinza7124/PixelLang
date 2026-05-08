@@ -553,8 +553,16 @@
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-pixel">[ PixelLang ]</div>
-    <div class="logo-tag">Language Specification v1.0 — CS4031</div>
+    <div class="logo-tag">Language Specification v2.0 — CS4031</div>
   </div>
+
+  <div class="nav-section">Documentation</div>
+  <a class="nav-item" href="../DOCUMENTATION.md" target="_blank" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#7c6af5"></span>📚 Full SRS (IEEE Format)
+  </a>
+  <a class="nav-item" href="../README.md" target="_blank" onclick="setActive(this)">
+    <span class="nav-dot" style="background:#5ddbbc"></span>📖 Quick Start
+  </a>
 
   <div class="nav-section">Foundation</div>
   <a class="nav-item active" href="#overview" onclick="setActive(this)">
@@ -619,26 +627,31 @@
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px">
       <button class="hamburger" onclick="openSidebar()">☰</button>
-      <span class="topbar-title">PixelLang — Complete Language Spec</span>
+      <span class="topbar-title">PixelLang — Complete Language Spec v2.0</span>
     </div>
     <div class="badge-row">
       <span class="badge badge-pu">CS4031</span>
       <span class="badge badge-te">Spring 2026</span>
       <span class="badge badge-am">LL(1) Grammar</span>
+      <span class="badge badge-pu">37 Semantic Rules</span>
+      <span class="badge badge-te">AST Optimizer</span>
     </div>
   </div>
 
   <!-- HERO -->
   <div class="hero">
-    <h1>PixelLang</h1>
-    <div class="hero-sub">A retro-inspired domain-specific language for pixel art generation — complete compiler specification for CS4031 Compiler Construction.</div>
+    <h1>PixelLang v2.0</h1>
+    <div class="hero-sub">A retro-inspired domain-specific language for pixel art generation — complete compiler specification for CS4031 Compiler Construction with IEEE SRS format documentation.</div>
     <div class="hero-meta">
       <span class="hero-chip">Python backend</span>
       <span class="hero-chip">Pillow / PIL output</span>
       <span class="hero-chip">Tkinter GUI</span>
       <span class="hero-chip">PNG generation</span>
-      <span class="hero-chip">8 keywords</span>
-      <span class="hero-chip">13 semantic rules</span>
+      <span class="hero-chip">30+ keywords</span>
+      <span class="hero-chip">37 semantic rules</span>
+      <span class="hero-chip">AST Optimizer</span>
+      <span class="hero-chip">DFA Lexer</span>
+      <span class="hero-chip">LL(1) Parser</span>
     </div>
   </div>
 
@@ -653,7 +666,7 @@
         <span class="section-num">§ 01</span>
         <span class="section-title">Overview & Compilation Pipeline</span>
       </div>
-      <p class="section-desc">PixelLang is a mini scripting language that compiles a <strong>.px</strong> source file into a PNG pixel-art image. The compiler implements all six classical phases of a compiler: lexical analysis, syntax analysis, semantic analysis, intermediate representation (AST), code generation, and error reporting — all with a Tkinter GUI.</p>
+      <p class="section-desc">PixelLang is a mini scripting language that compiles a <strong>.px</strong> source file into a PNG pixel-art image. The compiler implements the core compilation phases end-to-end: lexical analysis, syntax analysis, semantic analysis, AST optimization, and code generation, with centralized error reporting and a Tkinter GUI.</p>
 
       <div class="pipeline">
         <div class="pipe-box" style="background:rgba(124,106,245,.15);color:#b0a6ff;border:1px solid rgba(124,106,245,.3)">Source.px</div>
@@ -682,7 +695,8 @@
             <tr><td class="accent">AST</td><td class="mono">ast_nodes.py</td><td>Parser calls</td><td>Node objects + visitor</td><td>Tree structure, visitor pattern</td></tr>
             <tr><td class="accent">Symbol Table</td><td class="mono">symbol_table.py</td><td>AST traversal</td><td>Scope stack of Symbols</td><td>Scopes, define/lookup</td></tr>
             <tr><td class="accent">Semantic Analysis</td><td class="mono">semantic.py</td><td>AST + Symbol Table</td><td>List of SemanticErrors</td><td>Type/bounds/scope checking</td></tr>
-            <tr><td class="accent">Code Generation</td><td class="mono">codegen.py</td><td>Validated AST</td><td>PIL Image → PNG</td><td>AST walk, transform stack</td></tr>
+            <tr><td class="accent">AST Optimization</td><td class="mono">optimizer.py</td><td>Validated AST</td><td>Optimized AST</td><td>Transform folding, dead code removal</td></tr>
+            <tr><td class="accent">Code Generation</td><td class="mono">codegen.py</td><td>Optimized AST</td><td>PIL Image → PNG</td><td>AST walk, transform stack</td></tr>
             <tr><td class="accent">GUI</td><td class="mono">gui/app.py</td><td>User input</td><td>Editor + live preview</td><td>Tkinter, syntax highlighting</td></tr>
           </tbody>
         </table>
@@ -697,7 +711,7 @@
         <span class="section-num">§ 01b</span>
         <span class="section-title">Compiler Phases — Project Report</span>
       </div>
-      <p class="section-desc">Detailed architectural breakdown of the PixelLang compiler pipeline with phase diagrams, data transformations, and component mapping.</p>
+      <p class="section-desc">Detailed architectural breakdown of the current PixelLang compiler pipeline with phase diagrams, data transformations, optimization, and component mapping.</p>
 
       <style>
         .pipeline-container {
@@ -732,6 +746,7 @@
         .phase-ast { background: linear-gradient(135deg, #d69e2e 0%, #b7791f 100%); }
         .phase-symbol { background: linear-gradient(135deg, #38a169 0%, #2f855a 100%); }
         .phase-semantic { background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%); }
+        .phase-optimize { background: linear-gradient(135deg, #319795 0%, #2c7a7b 100%); }
         .phase-codegen { background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%); }
         .phase-output { background: linear-gradient(135deg, #d53f8c 0%, #b83280 100%); }
         .phase-title {
@@ -956,6 +971,16 @@
         </div>
         <div class="arrow-down">↓</div>
         <div class="data-flow"><span>AST + SymbolTable</span> → <span>Validated AST</span> or <span style="color:#fc8181;">SemanticErrors[]</span></div>
+
+        <div class="phase-row">
+          <div class="phase-box phase-optimize">
+            <div class="phase-title">⚙ OPTIMIZATION</div>
+            <div class="phase-file">optimizer.py</div>
+            <div class="phase-desc">Fold + Prune AST</div>
+          </div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="data-flow"><span>Validated AST</span> → <span>Optimized AST</span></div>
         
         <div class="phase-row">
           <div class="phase-box phase-codegen">
@@ -965,7 +990,7 @@
           </div>
         </div>
         <div class="arrow-down">↓</div>
-        <div class="data-flow"><span>Validated AST</span> → <span>PNG Image</span></div>
+        <div class="data-flow"><span>Optimized AST</span> → <span>PNG Image</span></div>
         
         <div class="phase-row">
           <div class="phase-box phase-output">
@@ -1122,10 +1147,54 @@
         </div>
       </div>
 
-      <!-- Phase 4: Semantic Analysis -->
+      <!-- Phase 4: AST Optimization -->
       <div class="phase-detail-card">
         <div class="phase-detail-header">
-          <div class="phase-badge" style="background:linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);">04</div>
+          <div class="phase-badge" style="background:linear-gradient(135deg, #319795 0%, #2c7a7b 100%);">04</div>
+          <div>
+            <div class="phase-detail-title">AST Optimization</div>
+            <div class="phase-detail-subtitle">File: compiler/optimizer.py | Function: optimize()</div>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <h4>Input</h4>
+            <p>Validated AST from the semantic phase</p>
+          </div>
+          <div class="detail-item">
+            <h4>Output</h4>
+            <p>Semantics-preserving optimized AST</p>
+          </div>
+          <div class="detail-item">
+            <h4>Implemented Passes</h4>
+            <ul>
+              <li>Fold consecutive Translate, Rotate, Scale, and Mirror chains</li>
+              <li>Remove no-op transforms such as Translate(0,0) and Rotate(0)</li>
+              <li>Eliminate dead Var / Set statements</li>
+              <li>Recursively optimize Loop bodies</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>Behavior</h4>
+            <ul>
+              <li>Preserves program semantics</li>
+              <li>Reduces redundant AST nodes</li>
+              <li>Feeds a smaller tree into code generation</li>
+              <li>Falls back to the original AST if optimization fails</li>
+            </ul>
+          </div>
+        </div>
+        <div class="transformation-box">
+          <div class="from">Validated AST with redundant transforms</div>
+          <div class="arrow">↓ Optimize / Fold / Prune ↓</div>
+          <div class="to">Smaller AST with identical image output</div>
+        </div>
+      </div>
+
+      <!-- Phase 5: Semantic Analysis -->
+      <div class="phase-detail-card">
+        <div class="phase-detail-header">
+          <div class="phase-badge" style="background:linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);">05</div>
           <div>
             <div class="phase-detail-title">Semantic Analysis</div>
             <div class="phase-detail-subtitle">File: compiler/semantic.py | Class: SemanticAnalyzer</div>
@@ -1166,10 +1235,10 @@
         </div>
       </div>
 
-      <!-- Phase 5: Code Generation -->
+      <!-- Phase 6: Code Generation -->
       <div class="phase-detail-card">
         <div class="phase-detail-header">
-          <div class="phase-badge" style="background:linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">05</div>
+          <div class="phase-badge" style="background:linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">06</div>
           <div>
             <div class="phase-detail-title">Code Generation</div>
             <div class="phase-detail-subtitle">File: compiler/codegen.py | Class: CodeGenerator</div>
@@ -1253,6 +1322,12 @@
             <td>37 validation rules for correctness</td>
           </tr>
           <tr>
+            <td>AST Optimization</td>
+            <td class="mono">compiler/optimizer.py</td>
+            <td class="mono">optimize()</td>
+            <td>Fold transforms and remove redundant AST nodes</td>
+          </tr>
+          <tr>
             <td>Code Generation</td>
             <td class="mono">compiler/codegen.py</td>
             <td class="mono">CodeGenerator</td>
@@ -1294,7 +1369,7 @@
       <!-- Success Flow -->
       <div class="success-flow">
         <span style="font-size:20px;">✓</span>
-        <span class="success-flow-text">Successful compilation: Source Code → Tokens → AST → Validated AST → PNG Image</span>
+        <span class="success-flow-text">Successful compilation: Source Code → Tokens → AST → Validated AST → Optimized AST → PNG Image</span>
         <span style="font-size:20px;">✓</span>
       </div>
     </div>
@@ -2216,7 +2291,7 @@ hex    = digit | "A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f" ;
         <span class="section-num">§ 14</span>
         <span class="section-title">Code Generation — Pillow Backend</span>
       </div>
-      <p class="section-desc">The <strong>CodeGenerator</strong> is the final compiler phase. It walks the validated AST using the visitor pattern and calls Pillow (PIL) drawing API methods to produce a pixel-perfect PNG image. It maintains a <strong>transform stack</strong> to handle coordinate offsets across nested LOOP bodies.</p>
+      <p class="section-desc">The <strong>CodeGenerator</strong> is the final compiler phase after optimization. It walks the optimized AST using the visitor pattern and calls Pillow (PIL) drawing API methods to produce a pixel-perfect PNG image. It maintains a <strong>transform stack</strong> to handle coordinate offsets across nested LOOP bodies.</p>
 
       <pre><span class="kw">from</span> PIL <span class="kw">import</span> Image, ImageDraw
 
@@ -2377,7 +2452,7 @@ hex    = digit | "A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f" ;
             self.status.config(text=<span class="str">f"OK — compiled successfully"</span>)</pre>
       </div>
 
-      <div class="note">The GUI calls <span class="inline-code">compile_source(source: str) → (PIL.Image | None, List[str])</span> from <span class="inline-code">main.py</span>. This function runs the full pipeline (Lexer → Parser → Semantic → CodeGen) and returns either the generated image or a list of error strings. The GUI never directly calls any compiler class — it goes through this single entry point.</div>
+      <div class="note">The GUI calls <span class="inline-code">compile_source(source: str) → (PIL.Image | None, List[str])</span> from <span class="inline-code">main.py</span>. This function runs the full pipeline (Lexer → Parser → Semantic → Optimize → CodeGen) and returns either the generated image or a list of error strings. The GUI never directly calls any compiler class — it goes through this single entry point.</div>
 
       <h3>Complete sample PixelLang program</h3>
       <pre><span class="cm">// PixelLang sample — tests all 8 keywords</span>

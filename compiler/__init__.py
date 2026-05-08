@@ -25,6 +25,8 @@ from .parser import Parser, parse
 from .ast_nodes import *
 from .semantic import SemanticAnalyzer, analyze
 from .codegen import CodeGenerator, generate
+from .optimizer import optimize
+from .ast_printer import ASTFormatter, pretty_print
 from .errors import PixelLangError
 from .symbol_table import SymbolTable, Symbol
 
@@ -60,7 +62,14 @@ def compile_source(source: str) -> tuple:
         semantic_errors = analyze(ast)
         if semantic_errors:
             return None, [str(e) for e in semantic_errors]
-        
+
+        # Optional Phase: AST Optimizations (safe, semantics-preserving)
+        try:
+            ast = optimize(ast)
+        except Exception:
+            # If optimization fails for any reason, fall back to original AST
+            pass
+
         # Phase 4: Code Generation
         try:
             image = generate(ast)
@@ -140,6 +149,9 @@ __all__ = [
     'ASTPrinter',
     'SemanticAnalyzer',
     'analyze',
+    'optimize',
+    'ASTFormatter',
+    'pretty_print',
     'CodeGenerator',
     'generate',
     'PixelLangError',
